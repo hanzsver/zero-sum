@@ -1185,6 +1185,38 @@
       .plan-tl-row.target .plan-tl-bar-fill { background: var(--primary); }
       .plan-tl-row.target .plan-tl-amount { color: var(--primary); }
 
+      /* ── 비밀번호 화면 ── */
+      #pin-screen {
+        position: fixed; inset: 0; background: var(--surface);
+        display: none; flex-direction: column;
+        align-items: center; justify-content: center;
+        z-index: 998; gap: 0;
+      }
+      .pin-logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+      .pin-logo span { color: var(--primary); }
+      .pin-sub { font-size: 14px; color: var(--text2); margin-bottom: 40px; }
+      .pin-dots { display: flex; gap: 14px; margin-bottom: 36px; }
+      .pin-dot {
+        width: 14px; height: 14px; border-radius: 50%;
+        border: 2px solid var(--border2); background: var(--surface);
+        transition: all 0.15s;
+      }
+      .pin-dot.filled { background: var(--primary); border-color: var(--primary); }
+      .pin-dot.error { background: var(--danger); border-color: var(--danger); }
+      .pin-keypad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+      .pin-key {
+        width: 72px; height: 72px; border-radius: 50%;
+        border: none; background: var(--surface2);
+        font-size: 22px; font-weight: 600; color: var(--text);
+        cursor: pointer; font-family: inherit;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.12s; -webkit-tap-highlight-color: transparent;
+      }
+      .pin-key:active { background: var(--primary-light); color: var(--primary); }
+      .pin-key.del { font-size: 18px; color: var(--text2); background: transparent; }
+      .pin-key.empty { background: transparent; pointer-events: none; }
+      .pin-error { font-size: 13px; color: var(--danger); margin-top: 20px; min-height: 20px; font-weight: 500; }
+
       @keyframes pop {
         0% {
           transform: scale(1);
@@ -1213,6 +1245,33 @@
       <div class="logo">Zero<span>-Sum</span> 💸</div>
       <div class="spin"></div>
       <div style="font-size: 13px; color: var(--text2)">불러오는 중...</div>
+    </div>
+
+    <!-- 비밀번호 화면 -->
+    <div id="pin-screen">
+      <div class="pin-logo">Zero<span>-Sum</span> 💸</div>
+      <div class="pin-sub">비밀번호 4자리를 입력해주세요</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="pinInput('1')">1</button>
+        <button class="pin-key" onclick="pinInput('2')">2</button>
+        <button class="pin-key" onclick="pinInput('3')">3</button>
+        <button class="pin-key" onclick="pinInput('4')">4</button>
+        <button class="pin-key" onclick="pinInput('5')">5</button>
+        <button class="pin-key" onclick="pinInput('6')">6</button>
+        <button class="pin-key" onclick="pinInput('7')">7</button>
+        <button class="pin-key" onclick="pinInput('8')">8</button>
+        <button class="pin-key" onclick="pinInput('9')">9</button>
+        <div class="pin-key empty"></div>
+        <button class="pin-key" onclick="pinInput('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
     </div>
 
     <!-- 메인 앱 -->
@@ -2013,13 +2072,67 @@
         }
       }
 
-      // ── 유저 선택 (인증 대체) ──
-      // ── 앱 진입 (선택 화면 없이 바로 시작) ──
+      // ── PIN 인증 ──
+      const CORRECT_PIN = "0110";
+      let pinValue = "";
+
+      window.pinInput = (n) => {
+        if (pinValue.length >= 4) return;
+        pinValue += n;
+        updatePinDots();
+        if (pinValue.length === 4) {
+          setTimeout(() => checkPin(), 120);
+        }
+      };
+
+      window.pinDel = () => {
+        pinValue = pinValue.slice(0, -1);
+        updatePinDots();
+        document.getElementById("pin-error").textContent = "";
+      };
+
+      function updatePinDots(state = "normal") {
+        for (let i = 0; i < 4; i++) {
+          const dot = document.getElementById("dot-" + i);
+          dot.className = "pin-dot";
+          if (i < pinValue.length) dot.classList.add(state === "error" ? "error" : "filled");
+        }
+      }
+
+      function checkPin() {
+        if (pinValue === CORRECT_PIN) {
+          // 인증 성공 — 24시간 세션 저장
+          sessionStorage.setItem("zsc_auth", Date.now());
+          document.getElementById("pin-screen").style.display = "none";
+          enterApp();
+        } else {
+          updatePinDots("error");
+          document.getElementById("pin-error").textContent = "비밀번호가 맞지 않아요";
+          setTimeout(() => {
+            pinValue = "";
+            updatePinDots();
+            document.getElementById("pin-error").textContent = "";
+          }, 800);
+        }
+      }
+
+      function enterApp() {
+        document.getElementById("app-loading").style.display = "none";
+        document.getElementById("main-app").style.display = "block";
+        document.getElementById("nav-month").textContent = getCycleLabel();
+        subscribeDB();
+        updateCycleBanner();
+      }
+
+      // ── 앱 진입 (세션 확인 → PIN 또는 바로 진입) ──
       document.getElementById("app-loading").style.display = "none";
-      document.getElementById("main-app").style.display = "block";
-      document.getElementById("nav-month").textContent = getCycleLabel();
-      subscribeDB();
-      updateCycleBanner();
+      const auth = sessionStorage.getItem("zsc_auth");
+      if (auth) {
+        // 이미 인증된 세션
+        enterApp();
+      } else {
+        document.getElementById("pin-screen").style.display = "flex";
+      }
 
       // ── 렌더 함수들 ──
       function renderAll() {
