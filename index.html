@@ -2073,7 +2073,7 @@
       }
 
       // ── PIN 인증 ──
-      const CORRECT_PIN = "0110";
+      const CORRECT_PIN_HASH = "a5c3dd48facf21ed5f916d0ae979091fead570e6aea6c1d8038d1f68b26fa51f";
       let pinValue = "";
 
       window.pinInput = (n) => {
@@ -2099,9 +2099,12 @@
         }
       }
 
-      function checkPin() {
-        if (pinValue === CORRECT_PIN) {
-          // 인증 성공 — 24시간 세션 저장
+      async function checkPin() {
+        const encoded = new TextEncoder().encode(pinValue);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        if (hashHex === CORRECT_PIN_HASH) {
           sessionStorage.setItem("zsc_auth", Date.now());
           document.getElementById("pin-screen").style.display = "none";
           enterApp();
