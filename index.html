@@ -105,7 +105,8 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 14px 20px;
+        padding: 0 20px;
+        height: 52px;
       }
       .nav-logo {
         font-size: 17px;
@@ -157,6 +158,9 @@
       .tabs {
         background: var(--surface);
         border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 52px;
+        z-index: 99;
       }
       .tabs-inner {
         max-width: 480px;
@@ -997,6 +1001,8 @@
         transition: all 0.12s;
       }
       .check-edit-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-mid); }
+      .check-item.readonly { cursor: default; }
+      .check-item.readonly:hover { background: var(--surface); }
       .check-amt-edit {
         display: flex; flex-direction: column; gap: 6px;
         margin-top: 8px; padding-top: 8px;
@@ -1217,6 +1223,48 @@
       .pin-key.empty { background: transparent; pointer-events: none; }
       .pin-error { font-size: 13px; color: var(--danger); margin-top: 20px; min-height: 20px; font-weight: 500; }
 
+
+      /* ── 월 네비게이터 ── */
+      /* nav 바로 아래 sticky로 붙어있는 서브 헤더처럼 동작 */
+      .month-nav-wrap {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 100px; /* nav 52 + tabs 48 */
+        z-index: 90;
+      }
+      .month-nav {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 20px; height: 48px;
+        max-width: 480px; margin: 0 auto;
+      }
+      .month-nav-btn {
+        width: 32px; height: 32px; border-radius: 50%;
+        border: none; background: transparent;
+        color: var(--text3); font-size: 20px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.12s; flex-shrink: 0; font-weight: 300;
+        line-height: 1;
+      }
+      .month-nav-btn:hover { color: var(--primary); background: var(--primary-light); }
+      .month-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+      .month-nav-center { display: flex; align-items: center; gap: 8px; }
+      .month-nav-label {
+        font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px;
+      }
+      .month-nav-label.past { color: var(--text2); font-weight: 600; }
+      .month-nav-badge {
+        font-size: 10px; font-weight: 700; padding: 2px 7px;
+        border-radius: 20px;
+        background: var(--primary); color: #fff;
+      }
+      .month-readonly-banner {
+        background: var(--warning-light);
+        border-top: 1px solid #fcd34d;
+        padding: 7px 20px; font-size: 12px; color: var(--warning);
+        font-weight: 500;
+        text-align: center; max-width: 480px; margin: 0 auto;
+      }
       @keyframes pop {
         0% {
           transform: scale(1);
@@ -1296,9 +1344,25 @@
         </div>
       </div>
 
+      <!-- 공용 월 네비게이터 (탭 콘텐츠 위 sticky) -->
+      <div class="month-nav-wrap" id="global-month-nav-wrap" style="display:none">
+        <div class="month-nav">
+          <button class="month-nav-btn" id="global-nav-prev" onclick="navigateMonth(-1)">‹</button>
+          <div class="month-nav-center">
+            <span class="month-nav-label" id="global-nav-label">—</span>
+            <span class="month-nav-badge" id="global-nav-badge" style="display:none">이번 달</span>
+          </div>
+          <button class="month-nav-btn" id="global-nav-next" onclick="navigateMonth(1)">›</button>
+        </div>
+        <div class="month-readonly-banner" id="global-readonly-banner" style="display:none">
+          📋 과거 기록 보기 — 체크 및 수정이 불가능해요
+        </div>
+      </div>
+
       <div class="content">
         <!-- HOME -->
         <div class="page active" id="page-home">
+
           <div id="cycle-banner" class="cycle-banner fresh">
             <div class="cb-left">
               <div class="cb-period" id="cb-period">—</div>
@@ -1874,13 +1938,16 @@
         settlements: [],
         debts: [],
         cycleKey: getCycleKey(),
-        overrides: {},   // 이체 미션 이번 달 금액 override { "j_2": 800000 }
-        ledger: {},      // 고정비 가계부 실지출 { expenseId: { actual: 65000, items: [{name,amt}] } }
+        overrides: {},
+        ledger: {},
       };
-      let currentUser = null;
+      // 월별 히스토리 저장소: { "2026-06": { checks, fixedChecks, overrides, ledger, salaryJini, salaryGeuni } }
+      let monthlyData = {};
+      // 현재 보고 있는 사이클 (기본: 이번 달)
+      let viewingCycle = getCycleKey();
+      const FIRST_CYCLE = "2026-06"; // 데이터 시작점
       let dbUnsubscribe = null;
       let salaryDebounce = null;
-      let syncDotEl, lastSyncEl;
 
       // ── 유틸 ──
       function getCycleKey(date) {
@@ -1992,79 +2059,95 @@
         }
       }
 
-      // ── Firebase DB 경로: 커플 공용 단일 경로 ──
-      // 두 계정 모두 같은 경로를 읽고 씀
       const COUPLE_PATH = "zsc_couple";
+      function dbRef(path) { return ref(db, path); }
 
-      function dbRef(path) {
-        return ref(db, path);
+      // ── 뷰잉 사이클의 state 반환 ──
+      function getViewState() {
+        const ck = viewingCycle;
+        const m = monthlyData[ck] || {};
+        return {
+          salaryJini: m.salaryJini ?? state.salaryJini,
+          salaryGeuni: m.salaryGeuni ?? state.salaryGeuni,
+          checks: m.checks || {},
+          fixedChecks: m.fixedChecks || {},
+          overrides: m.overrides || {},
+          ledger: m.ledger || {},
+        };
       }
 
-      // ── DB 실시간 구독 ──
+      // 이번 달인지 여부
+      function isCurrentCycle() { return viewingCycle === getCycleKey(); }
+
+      // ── DB 실시간 구독 (전체 구조) ──
       function subscribeDB() {
         if (dbUnsubscribe) dbUnsubscribe();
         const r = dbRef(COUPLE_PATH);
-        dbUnsubscribe = onValue(
-          r,
-          (snapshot) => {
-            const remote = snapshot.val();
-            if (!remote) {
-              renderAll();
-              return;
-            }
+        dbUnsubscribe = onValue(r, (snapshot) => {
+          const remote = snapshot.val();
+          if (!remote) { renderAll(); return; }
 
-            // 사이클 자동 리셋
-            const currentCycle = getCycleKey();
-            const savedCycle = remote.cycleKey;
-            if (savedCycle && savedCycle !== currentCycle) {
-              state = {
-                ...state,
-                salaryJini: remote.salaryJini || state.salaryJini,
-                salaryGeuni: remote.salaryGeuni || state.salaryGeuni,
-                checks: {},
-                fixedChecks: {},
-                overrides: {},
-                settlements: remote.settlements || [],
-                debts: remote.debts || [],
-                ledger: remote.ledger || {},
-                cycleKey: currentCycle,
-              };
-              setSyncStatus("online");
-              renderAll();
-              showToast(`🎊 ${getCycleLabel()} 시작! 체크리스트 초기화됐어요`);
-              return;
-            }
+          // 정산/채무는 공통 (월별 아님)
+          state.settlements = remote.settlements || [];
+          state.debts = remote.debts || [];
+          state.cycleKey = remote.cycleKey || getCycleKey();
 
-            state = {
-              salaryJini: remote.salaryJini ?? state.salaryJini,
-              salaryGeuni: remote.salaryGeuni ?? state.salaryGeuni,
+          // 월별 데이터 로드
+          monthlyData = remote.monthly || {};
+
+          // 이번 달 데이터가 없으면 기존 최상위 데이터로 마이그레이션
+          const currentCycle = getCycleKey();
+          if (!monthlyData[currentCycle] && (remote.checks || remote.salaryJini)) {
+            monthlyData[currentCycle] = {
+              salaryJini: remote.salaryJini || state.salaryJini,
+              salaryGeuni: remote.salaryGeuni || state.salaryGeuni,
               checks: remote.checks || {},
               fixedChecks: remote.fixedChecks || {},
-              settlements: remote.settlements || [],
-              debts: remote.debts || [],
-              cycleKey: remote.cycleKey || getCycleKey(),
               overrides: remote.overrides || {},
               ledger: remote.ledger || {},
             };
-            document.getElementById("salary-jini").value = state.salaryJini;
-            document.getElementById("salary-geuni").value = state.salaryGeuni;
-            setSyncStatus("online");
-            renderAll();
-          },
-          (err) => {
-            console.error(err);
-            setSyncStatus("offline");
-          },
-        );
+          }
+
+          // 이번 달 월급 인풋 동기화
+          const cur = monthlyData[currentCycle] || {};
+          if (cur.salaryJini) {
+            state.salaryJini = cur.salaryJini;
+            document.getElementById("salary-jini").value = cur.salaryJini;
+          }
+          if (cur.salaryGeuni) {
+            state.salaryGeuni = cur.salaryGeuni;
+            document.getElementById("salary-geuni").value = cur.salaryGeuni;
+          }
+
+          setSyncStatus("online");
+          renderAll();
+        }, (err) => {
+          console.error(err);
+          setSyncStatus("offline");
+        });
       }
 
+      // 이번 달 데이터만 push (월별 경로에 저장)
       async function pushState(partial) {
+        if (!isCurrentCycle()) return; // 과거 달은 쓰기 불가
         setSyncStatus("syncing");
+        const cycle = getCycleKey();
         try {
-          await update(dbRef(COUPLE_PATH), {
-            ...partial,
-            cycleKey: state.cycleKey,
-          });
+          // monthly/{cycle}/ 하위에 저장
+          const monthPartial = {};
+          for (const k of ["checks","fixedChecks","overrides","ledger","salaryJini","salaryGeuni"]) {
+            if (partial[k] !== undefined) monthPartial[`monthly/${cycle}/${k}`] = partial[k];
+          }
+          // 정산/채무는 공통 경로
+          if (partial.settlements !== undefined) monthPartial["settlements"] = partial.settlements;
+          if (partial.debts !== undefined) monthPartial["debts"] = partial.debts;
+          monthPartial["cycleKey"] = cycle;
+          await update(dbRef(COUPLE_PATH), monthPartial);
+          // 로컬 monthlyData 동기화
+          if (!monthlyData[cycle]) monthlyData[cycle] = {};
+          for (const k of Object.keys(partial)) {
+            if (k !== "settlements" && k !== "debts") monthlyData[cycle][k] = partial[k];
+          }
           setSyncStatus("online");
         } catch (e) {
           setSyncStatus("offline");
@@ -2139,6 +2222,7 @@
 
       // ── 렌더 함수들 ──
       function renderAll() {
+        updateMonthNavs();
         renderHome();
         renderChecklist();
         renderFixed();
@@ -2147,16 +2231,70 @@
         renderSettleSummary();
       }
 
+      // ── 월 네비게이터 업데이트 (공용 단일 네비) ──
+      function updateMonthNavs() {
+        const ck = viewingCycle;
+        const isCurrent = isCurrentCycle();
+        const [y, m] = ck.split("-").map(Number);
+        const label = `${y}년 ${m}월`;
+
+        // 공용 네비 업데이트
+        const wrap = document.getElementById("global-month-nav-wrap");
+        const labelEl = document.getElementById("global-nav-label");
+        const badge = document.getElementById("global-nav-badge");
+        const prev = document.getElementById("global-nav-prev");
+        const next = document.getElementById("global-nav-next");
+        const banner = document.getElementById("global-readonly-banner");
+
+        // 현재 활성 탭 확인해서 홈/이체미션/고정비일때만 네비 표시
+        const activePage = document.querySelector(".page.active");
+        const showNav = activePage && ["page-home","page-mission","page-fixed"].includes(activePage.id);
+        if (wrap) wrap.style.display = showNav ? "block" : "none";
+
+        if (labelEl) { labelEl.textContent = label; labelEl.className = "month-nav-label" + (isCurrent ? "" : " past"); }
+        if (badge) badge.style.display = isCurrent ? "inline" : "none";
+        if (prev) prev.disabled = ck <= FIRST_CYCLE;
+        if (next) next.disabled = isCurrent;
+        if (banner) banner.style.display = (showNav && !isCurrent) ? "block" : "none";
+
+        // nav 상단 월 텍스트 동기화
+        const navMonth = document.getElementById("nav-month");
+        if (navMonth) navMonth.textContent = `${y}년 ${m}월`;
+      }
+
+      // ── 월 이동 ──
+      window.navigateMonth = (dir) => {
+        const [y, m] = viewingCycle.split("-").map(Number);
+        const date = new Date(y, m - 1 + dir, 1);
+        const newCycle = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+        if (newCycle < FIRST_CYCLE) return;
+        if (newCycle > getCycleKey()) return;
+        viewingCycle = newCycle;
+        const vs = getViewState();
+        state.salaryJini = vs.salaryJini;
+        state.salaryGeuni = vs.salaryGeuni;
+        const jiEl = document.getElementById("salary-jini");
+        const gnEl = document.getElementById("salary-geuni");
+        if (jiEl) jiEl.value = vs.salaryJini;
+        if (gnEl) gnEl.value = vs.salaryGeuni;
+        renderAll();
+      };
+
       function renderHome() {
-        const j = state.salaryJini,
-          g = state.salaryGeuni;
+        const vs = getViewState();
+        const j = vs.salaryJini, g = vs.salaryGeuni;
+        // 인풋은 이번달일때만 업데이트 (과거 열람 중일땐 인풋 비활성)
+        const jiEl = document.getElementById("salary-jini");
+        const gnEl = document.getElementById("salary-geuni");
+        if (jiEl) { jiEl.value = j; jiEl.disabled = !isCurrentCycle(); }
+        if (gnEl) { gnEl.value = g; gnEl.disabled = !isCurrentCycle(); }
         document.getElementById("home-total").textContent = fmt(j + g);
         document.getElementById("home-sub").textContent =
           `징니 ${fmt(j)} · 그니 ${fmt(g)}`;
         const jItems = BUDGET_RULES.filter((x) => x.user === "jini");
         const gItems = BUDGET_RULES.filter((x) => x.user === "geuni");
-        const jDone = jItems.filter((_, i) => state.checks["j_" + i]).length;
-        const gDone = gItems.filter((_, i) => state.checks["g_" + i]).length;
+        const jDone = jItems.filter((_, i) => vs.checks["j_" + i]).length;
+        const gDone = gItems.filter((_, i) => vs.checks["g_" + i]).length;
         document.getElementById("home-jini-done").textContent =
           `${jDone} / ${jItems.length}`;
         document.getElementById("home-geuni-done").textContent =
@@ -2183,9 +2321,8 @@
           const idx = items.findIndex(x => x.name.includes(keyword));
           if (idx === -1) return 0;
           const key = prefix + idx;
-          if (!state.checks[key]) return 0; // 체크 안됐으면 0
-          // override 있으면 override, 없으면 computeAmt
-          const _o = state.overrides?.[key];
+          if (!vs.checks[key]) return 0;
+          const _o = vs.overrides?.[key];
           if (_o !== undefined) return typeof _o === "object" ? _o.amt : _o;
           return computeAmt(items[idx]);
         };
@@ -2234,28 +2371,25 @@
       function renderChecklist() {
         const jItems = BUDGET_RULES.filter((x) => x.user === "jini");
         const gItems = BUDGET_RULES.filter((x) => x.user === "geuni");
-        renderItems(jItems, document.getElementById("list-jini"), "j_", "jini");
-        renderItems(
-          gItems,
-          document.getElementById("list-geuni"),
-          "g_",
-          "geuni",
-        );
+        const vs = getViewState();
+        const readonly = !isCurrentCycle();
+        renderItems(jItems, document.getElementById("list-jini"), "j_", "jini", vs, readonly);
+        renderItems(gItems, document.getElementById("list-geuni"), "g_", "geuni", vs, readonly);
       }
 
-      function renderItems(items, container, prefix, user) {
+      function renderItems(items, container, prefix, user, vs, readonly) {
         container.innerHTML = "";
         const totalAmt = user === "jini" ? state.salaryJini : state.salaryGeuni;
         let doneAmt = 0;
         items.forEach((item, i) => {
           const key = prefix + i;
           const baseAmt = computeAmt(item);
-          // override 적용: 숫자(구버전) 또는 {amt, memo}(신버전) 모두 호환
-          const _ov = state.overrides?.[key];
+          // override 적용: vs(viewState) 기반
+          const _ov = vs?.overrides?.[key];
           const amt = _ov !== undefined
             ? (typeof _ov === "object" ? _ov.amt : _ov)
             : baseAmt;
-          const done = !!state.checks[key];
+          const done = !!(vs?.checks?.[key]);
           const isOverridden = _ov !== undefined;
           if (done) doneAmt += amt;
           const bankChip = item.to
@@ -2278,7 +2412,7 @@
             ? `<span class="override-badge">수정됨 <span class="override-orig">(원래 ${fmt(baseAmt)})</span>${overrideMemo ? `<span class="override-memo"> · ${overrideMemo}</span>` : ""}</span>`
             : "";
           const el = document.createElement("div");
-          el.className = `check-item ${user}-item ${done ? "done" : ""}`;
+          el.className = `check-item ${user}-item ${done ? "done" : ""} ${readonly ? "readonly" : ""}`;
           el.id = `check-item-${key}`;
           el.innerHTML = `
       <div class="checkbox ${done ? "checked" : ""}">${done ? `<svg width="12" height="10" fill="none" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ""}</div>
@@ -2287,9 +2421,9 @@
         <div class="check-header-row">
           <div class="check-amount-wrap">
             <div class="check-amount" id="amt-display-${key}">${fmt(amt)}</div>
-            <button class="check-edit-btn" onclick="startAmtEdit(event,'${key}',${baseAmt},${amt})" title="금액 수정">
+            ${readonly ? "" : `<button class="check-edit-btn" onclick="startAmtEdit(event,'${key}',${baseAmt},${amt})" title="금액 수정">
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M7.5 1.5l2 2L3 10H1V8L7.5 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-            </button>
+            </button>`}
           </div>
         </div>
         ${overrideBadge}
@@ -2306,6 +2440,7 @@
         </div>
       </div>`;
           el.onclick = (e) => {
+            if (readonly) return;
             if (e.target.closest(".check-acct") || e.target.closest(".check-edit-btn") || e.target.closest(".check-amt-edit"))
               return;
             toggleCheck(key, user);
@@ -2351,8 +2486,10 @@
       function renderFixed() {
         const wrap = document.getElementById("fixed-list");
         wrap.innerHTML = "";
+        const vs = getViewState();
+        const readonly = !isCurrentCycle();
         LEDGER_ACCOUNTS.forEach(account => {
-          const ledger = state.ledger || {};
+          const ledger = vs.ledger || {};
           const accLedger = ledger[account.id] || {};
 
           // 통장 섹션 헤더
@@ -2409,8 +2546,8 @@
                 <span class="ledger-diff ${over ? "over" : "ok"}">${over ? "+" + fmt(-diff) + " 초과" : fmt(diff) + " 여유"}</span>
               </div>` : ""}
               ${items.length ? `<div class="ledger-items">${itemsHtml}</div>` : ""}
-              <div class="ledger-input-row" id="ledger-input-${account.id}-${cat.id}">
-                ${cat.fixed
+              ${readonly ? "" : `<div class="ledger-input-row" id="ledger-input-${account.id}-${cat.id}">`}
+              ${readonly ? "" : cat.fixed
                   ? `<button class="ledger-confirm-btn ${hasActual ? "confirmed" : ""}" onclick="toggleLedgerFixed('${account.id}','${cat.id}',${cat.budget})">
                       ${hasActual ? "✓ 납부 확인됨" : "납부 확인"}
                     </button>`
@@ -2602,11 +2739,14 @@
 
       // ── 액션 함수들 (window에 노출) ──
       window.toggleCheck = async (key, user) => {
-        state.checks = { ...state.checks, [key]: !state.checks[key] };
-        renderChecklist();
-        renderHome();
-        if (state.checks[key]) showToast("✅ 이체 완료!");
-        await pushState({ checks: state.checks });
+        if (!isCurrentCycle()) return;
+        const ck = getCycleKey();
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        const cur = monthlyData[ck].checks || {};
+        monthlyData[ck].checks = { ...cur, [key]: !cur[key] };
+        renderChecklist(); renderHome();
+        if (monthlyData[ck].checks[key]) showToast("✅ 이체 완료!");
+        await pushState({ checks: monthlyData[ck].checks });
       };
 
       window.toggleFixed = async (id) => {
@@ -2716,35 +2856,39 @@
         const val = parseInt(input?.value);
         const memo = memoInput?.value.trim() || "";
         if (isNaN(val) || val < 0) { showToast("⚠️ 올바른 금액을 입력해주세요"); return; }
-        state.overrides = { ...state.overrides, [key]: { amt: val, memo } };
-        renderChecklist();
-        renderHome();
+        const ck = getCycleKey();
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo } };
+        renderChecklist(); renderHome();
         showToast("✅ 이번 달 금액 수정됨");
-        await pushState({ overrides: state.overrides });
+        await pushState({ overrides: monthlyData[ck].overrides });
       };
       window.resetAmtEdit = async (key) => {
-        const overrides = { ...state.overrides };
+        const ck = getCycleKey();
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        const overrides = { ...(monthlyData[ck].overrides||{}) };
         delete overrides[key];
-        state.overrides = overrides;
+        monthlyData[ck].overrides = overrides;
         renderChecklist();
         showToast("↩️ 원래 금액으로 복원");
-        await pushState({ overrides: state.overrides });
+        await pushState({ overrides: monthlyData[ck].overrides });
       };
 
       // ── 고정비 가계부 액션 ──
       window.toggleLedgerFixed = async (accId, catId, budget) => {
-        const ledger = { ...state.ledger };
+        const ck = getCycleKey();
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        const ledger = { ...(monthlyData[ck].ledger || {}) };
         if (!ledger[accId]) ledger[accId] = {};
         const cur = ledger[accId][catId];
         if (cur && cur.actual !== null && cur.actual !== undefined) {
-          // 이미 확인됨 → 취소
           ledger[accId][catId] = { actual: null, items: [] };
         } else {
           ledger[accId][catId] = { actual: budget, items: [] };
         }
-        state.ledger = ledger;
+        monthlyData[ck].ledger = ledger;
         renderFixed();
-        await pushState({ ledger: state.ledger });
+        await pushState({ ledger: monthlyData[ck].ledger });
       };
 
       window.addLedgerItem = async (accId, catId) => {
@@ -2755,30 +2899,32 @@
         const name = nameEl?.value.trim() || (typeEl?.value === "income" ? "수입" : "지출");
         const type = typeEl?.value || "expense"; // "expense" | "income"
         if (!amt || amt <= 0) { showToast("⚠️ 금액을 입력해주세요"); return; }
-        const ledger = { ...state.ledger };
+        const ck = getCycleKey();
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        const ledger = { ...(monthlyData[ck].ledger || {}) };
         if (!ledger[accId]) ledger[accId] = {};
         if (!ledger[accId][catId]) ledger[accId][catId] = { actual: 0, items: [] };
         ledger[accId][catId].items.push({ name, amt, type });
-        // actual = 지출 합계 - 수입 합계
         ledger[accId][catId].actual = ledger[accId][catId].items.reduce((s, x) =>
           x.type === "income" ? s - x.amt : s + x.amt, 0);
-        state.ledger = ledger;
+        monthlyData[ck].ledger = ledger;
         if (amtEl) amtEl.value = "";
         if (nameEl) nameEl.value = "";
         renderFixed();
         showToast(type === "income" ? "💚 수입 반영됨!" : "✅ 기록 추가!");
-        await pushState({ ledger: state.ledger });
+        await pushState({ ledger: monthlyData[ck].ledger });
       };
 
       window.deleteLedgerItem = async (accId, catId, idx) => {
-        const ledger = { ...state.ledger };
-        if (!ledger[accId]?.[catId]) return;
+        const ck = getCycleKey();
+        if (!monthlyData[ck]?.ledger?.[accId]?.[catId]) return;
+        const ledger = { ...monthlyData[ck].ledger };
         ledger[accId][catId].items.splice(idx, 1);
         ledger[accId][catId].actual = ledger[accId][catId].items.reduce((s, x) =>
           x.type === "income" ? s - x.amt : s + x.amt, 0);
-        state.ledger = ledger;
+        monthlyData[ck].ledger = ledger;
         renderFixed();
-        await pushState({ ledger: state.ledger });
+        await pushState({ ledger: monthlyData[ck].ledger });
       };
 
       window.copyAcct = (e, acct) => {
@@ -2788,19 +2934,18 @@
       };
 
       window.onSalaryInput = () => {
+        if (!isCurrentCycle()) return;
         clearTimeout(salaryDebounce);
         salaryDebounce = setTimeout(async () => {
-          state.salaryJini =
-            parseInt(document.getElementById("salary-jini").value) || 0;
-          state.salaryGeuni =
-            parseInt(document.getElementById("salary-geuni").value) || 0;
-          renderHome();
-          renderChecklist();
-          await pushState({
-            salaryJini: state.salaryJini,
-            salaryGeuni: state.salaryGeuni,
-          });
-        }, 800); // 타이핑 멈춘 후 0.8초 뒤 sync
+          const j = parseInt(document.getElementById("salary-jini").value) || 0;
+          const g = parseInt(document.getElementById("salary-geuni").value) || 0;
+          state.salaryJini = j; state.salaryGeuni = g;
+          const ck = getCycleKey();
+          if (!monthlyData[ck]) monthlyData[ck] = {};
+          monthlyData[ck].salaryJini = j; monthlyData[ck].salaryGeuni = g;
+          renderHome(); renderChecklist();
+          await pushState({ salaryJini: j, salaryGeuni: g });
+        }, 800);
       };
 
       window.showPage = (id, tabEl) => {
@@ -2812,6 +2957,7 @@
           .forEach((t) => t.classList.remove("active"));
         document.getElementById("page-" + id).classList.add("active");
         if (tabEl) tabEl.classList.add("active");
+        updateMonthNavs();
       };
 
       window.switchUser = (user, btn) => {
@@ -2849,17 +2995,18 @@
       };
 
       window.executeReset = async () => {
-        state.checks = {};
-        state.fixedChecks = {};
-        state.cycleKey = getCycleKey();
+        const ck = getCycleKey();
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        monthlyData[ck].checks = {};
+        monthlyData[ck].fixedChecks = {};
+        monthlyData[ck].overrides = {};
+        monthlyData[ck].ledger = {};
+        state.cycleKey = ck;
+        viewingCycle = ck;
         document.getElementById("reset-modal-overlay")?.remove();
         renderAll();
         showToast("🔄 체크리스트 초기화 완료!");
-        await pushState({
-          checks: {},
-          fixedChecks: {},
-          cycleKey: state.cycleKey,
-        });
+        await pushState({ checks: {}, fixedChecks: {}, overrides: {}, ledger: {}, cycleKey: ck });
       };
 
       // ── 내 집 계획 ──
