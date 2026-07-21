@@ -1259,9 +1259,9 @@
         background: var(--primary); color: #fff;
       }
       .month-readonly-banner {
-        background: var(--warning-light);
-        border-top: 1px solid #fcd34d;
-        padding: 7px 20px; font-size: 12px; color: var(--warning);
+        background: var(--primary-light);
+        border-top: 1px solid var(--primary-mid);
+        padding: 7px 20px; font-size: 12px; color: var(--primary);
         font-weight: 500;
         text-align: center; max-width: 480px; margin: 0 auto;
       }
@@ -1355,7 +1355,7 @@
           <button class="month-nav-btn" id="global-nav-next" onclick="navigateMonth(1)">›</button>
         </div>
         <div class="month-readonly-banner" id="global-readonly-banner" style="display:none">
-          📋 과거 기록 보기 — 체크 및 수정이 불가능해요
+          📅 과거 기록 열람 중 — 체크 및 금액 수정이 가능해요
         </div>
       </div>
 
@@ -1817,9 +1817,9 @@
           accountNo: "7942-32-43389",
           accountHolder: "이충근",
           rule: "fixed",
-          baseAmt: 350000,
-          desc: "집에서 먹는 식비 25 + 커플 데이트비 10",
-          tag: "auto",
+          baseAmt: 300000,
+          desc: "식비 20 + 데이트비 10 (징니 부담분)",
+          tag: "transfer",
         },
         {
           user: "jini",
@@ -1895,9 +1895,9 @@
           accountNo: "7942-32-43389",
           accountHolder: "이충근",
           rule: "fixed",
-          baseAmt: 350000,
-          desc: "집에서 먹는 식비 25 + 커플 데이트비 10",
-          tag: "auto",
+          baseAmt: 300000,
+          desc: "식비 20 + 데이트비 10 (그니 부담분)",
+          tag: "transfer",
         },
         {
           user: "geuni",
@@ -1958,13 +1958,23 @@
         }
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       }
-      function getCycleLabel(date) {
-        const d = date || new Date();
-        if (d.getDate() >= 25) {
-          const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-          return `${n.getFullYear()}년 ${n.getMonth() + 1}월 결산`;
+      // cycleKey "2026-07" → 해당 사이클 기간 "6/25 ~ 7/24"
+      function cycleKeyToRange(ck) {
+        const [y, m] = ck.split("-").map(Number);
+        // 이 사이클은 (m-1)월 25일 ~ m월 24일
+        const startM = m === 1 ? 12 : m - 1;
+        const startY = m === 1 ? y - 1 : y;
+        return { startY, startM, endY: y, endM: m };
+      }
+      function cycleKeyToLabel(ck) {
+        const { startY, startM, endY, endM } = cycleKeyToRange(ck);
+        if (startY === endY) {
+          return `${startM}/25 ~ ${endM}/24`;
         }
-        return `${d.getFullYear()}년 ${d.getMonth() + 1}월 결산`;
+        return `${startM}/25 ~ ${endY}년 ${endM}/24`;
+      }
+      function getCycleLabel(date) {
+        return cycleKeyToLabel(getCycleKey(date));
       }
       function getCycleDateRange() {
         const now = new Date(),
@@ -2127,23 +2137,19 @@
         });
       }
 
-      // 이번 달 데이터만 push (월별 경로에 저장)
+      // viewingCycle 기준으로 월별 데이터 push (과거달도 수정 가능)
       async function pushState(partial) {
-        if (!isCurrentCycle()) return; // 과거 달은 쓰기 불가
         setSyncStatus("syncing");
-        const cycle = getCycleKey();
+        const cycle = viewingCycle;
         try {
-          // monthly/{cycle}/ 하위에 저장
           const monthPartial = {};
           for (const k of ["checks","fixedChecks","overrides","ledger","salaryJini","salaryGeuni"]) {
             if (partial[k] !== undefined) monthPartial[`monthly/${cycle}/${k}`] = partial[k];
           }
-          // 정산/채무는 공통 경로
           if (partial.settlements !== undefined) monthPartial["settlements"] = partial.settlements;
           if (partial.debts !== undefined) monthPartial["debts"] = partial.debts;
-          monthPartial["cycleKey"] = cycle;
+          monthPartial["cycleKey"] = getCycleKey(); // 현재 사이클 기준 유지
           await update(dbRef(COUPLE_PATH), monthPartial);
-          // 로컬 monthlyData 동기화
           if (!monthlyData[cycle]) monthlyData[cycle] = {};
           for (const k of Object.keys(partial)) {
             if (k !== "settlements" && k !== "debts") monthlyData[cycle][k] = partial[k];
@@ -2236,7 +2242,7 @@
         const ck = viewingCycle;
         const isCurrent = isCurrentCycle();
         const [y, m] = ck.split("-").map(Number);
-        const label = `${y}년 ${m}월`;
+        const label = cycleKeyToLabel(ck);
 
         // 공용 네비 업데이트
         const wrap = document.getElementById("global-month-nav-wrap");
@@ -2259,7 +2265,7 @@
 
         // nav 상단 월 텍스트 동기화
         const navMonth = document.getElementById("nav-month");
-        if (navMonth) navMonth.textContent = `${y}년 ${m}월`;
+        if (navMonth) navMonth.textContent = cycleKeyToLabel(ck);
       }
 
       // ── 월 이동 ──
@@ -2372,9 +2378,8 @@
         const jItems = BUDGET_RULES.filter((x) => x.user === "jini");
         const gItems = BUDGET_RULES.filter((x) => x.user === "geuni");
         const vs = getViewState();
-        const readonly = !isCurrentCycle();
-        renderItems(jItems, document.getElementById("list-jini"), "j_", "jini", vs, readonly);
-        renderItems(gItems, document.getElementById("list-geuni"), "g_", "geuni", vs, readonly);
+        renderItems(jItems, document.getElementById("list-jini"), "j_", "jini", vs, false);
+        renderItems(gItems, document.getElementById("list-geuni"), "g_", "geuni", vs, false);
       }
 
       function renderItems(items, container, prefix, user, vs, readonly) {
@@ -2477,8 +2482,8 @@
           accountNo: "7942-32-43389",
           bank: "카카오뱅크",
           categories: [
-            { id: "food",   name: "식비",     budget: 500000, day: null, fixed: false, note: "마트 장보기 + 배달" },
-            { id: "date",   name: "데이트비", budget: 200000, day: null, fixed: false, note: "월 1회 데이트" },
+            { id: "food",   name: "식비",     budget: 200000, day: null, fixed: false, note: "마트 장보기 + 배달 (각 10만씩)" },
+            { id: "date",   name: "데이트비", budget: 100000, day: null, fixed: false, note: "월 1회 데이트 (각 5만씩)" },
           ],
         },
       ];
@@ -2487,7 +2492,7 @@
         const wrap = document.getElementById("fixed-list");
         wrap.innerHTML = "";
         const vs = getViewState();
-        const readonly = !isCurrentCycle();
+        const readonly = false;
         LEDGER_ACCOUNTS.forEach(account => {
           const ledger = vs.ledger || {};
           const accLedger = ledger[account.id] || {};
@@ -2739,8 +2744,7 @@
 
       // ── 액션 함수들 (window에 노출) ──
       window.toggleCheck = async (key, user) => {
-        if (!isCurrentCycle()) return;
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const cur = monthlyData[ck].checks || {};
         monthlyData[ck].checks = { ...cur, [key]: !cur[key] };
@@ -2856,7 +2860,7 @@
         const val = parseInt(input?.value);
         const memo = memoInput?.value.trim() || "";
         if (isNaN(val) || val < 0) { showToast("⚠️ 올바른 금액을 입력해주세요"); return; }
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo } };
         renderChecklist(); renderHome();
@@ -2864,7 +2868,7 @@
         await pushState({ overrides: monthlyData[ck].overrides });
       };
       window.resetAmtEdit = async (key) => {
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const overrides = { ...(monthlyData[ck].overrides||{}) };
         delete overrides[key];
@@ -2876,7 +2880,7 @@
 
       // ── 고정비 가계부 액션 ──
       window.toggleLedgerFixed = async (accId, catId, budget) => {
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const ledger = { ...(monthlyData[ck].ledger || {}) };
         if (!ledger[accId]) ledger[accId] = {};
@@ -2899,7 +2903,7 @@
         const name = nameEl?.value.trim() || (typeEl?.value === "income" ? "수입" : "지출");
         const type = typeEl?.value || "expense"; // "expense" | "income"
         if (!amt || amt <= 0) { showToast("⚠️ 금액을 입력해주세요"); return; }
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const ledger = { ...(monthlyData[ck].ledger || {}) };
         if (!ledger[accId]) ledger[accId] = {};
@@ -2916,7 +2920,7 @@
       };
 
       window.deleteLedgerItem = async (accId, catId, idx) => {
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]?.ledger?.[accId]?.[catId]) return;
         const ledger = { ...monthlyData[ck].ledger };
         ledger[accId][catId].items.splice(idx, 1);
@@ -2934,13 +2938,12 @@
       };
 
       window.onSalaryInput = () => {
-        if (!isCurrentCycle()) return;
         clearTimeout(salaryDebounce);
         salaryDebounce = setTimeout(async () => {
           const j = parseInt(document.getElementById("salary-jini").value) || 0;
           const g = parseInt(document.getElementById("salary-geuni").value) || 0;
           state.salaryJini = j; state.salaryGeuni = g;
-          const ck = getCycleKey();
+          const ck = viewingCycle;
           if (!monthlyData[ck]) monthlyData[ck] = {};
           monthlyData[ck].salaryJini = j; monthlyData[ck].salaryGeuni = g;
           renderHome(); renderChecklist();
