@@ -2118,15 +2118,30 @@
             };
           }
 
-          // 이번 달 월급 인풋 동기화
+          // 이번 달 월급 인풋 동기화 — 없으면 직전 사이클 월급 사용
           const cur = monthlyData[currentCycle] || {};
-          if (cur.salaryJini) {
-            state.salaryJini = cur.salaryJini;
-            document.getElementById("salary-jini").value = cur.salaryJini;
+
+          // 직전 사이클 키 계산 (currentCycle "2026-07" → "2026-06")
+          function prevCycleKey(ck) {
+            const [y, m] = ck.split("-").map(Number);
+            const d = new Date(y, m - 2, 1); // m-1이 현재달 0-based이므로 -2
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
           }
-          if (cur.salaryGeuni) {
-            state.salaryGeuni = cur.salaryGeuni;
-            document.getElementById("salary-geuni").value = cur.salaryGeuni;
+          const prev = monthlyData[prevCycleKey(currentCycle)] || {};
+
+          const resolvedJini = cur.salaryJini || prev.salaryJini || state.salaryJini;
+          const resolvedGeuni = cur.salaryGeuni || prev.salaryGeuni || state.salaryGeuni;
+
+          state.salaryJini = resolvedJini;
+          state.salaryGeuni = resolvedGeuni;
+          document.getElementById("salary-jini").value = resolvedJini;
+          document.getElementById("salary-geuni").value = resolvedGeuni;
+
+          // 이번 달 데이터에 월급이 없었다면 직전달 값으로 채워두기 (로컬만)
+          if (!cur.salaryJini && resolvedJini) {
+            if (!monthlyData[currentCycle]) monthlyData[currentCycle] = {};
+            monthlyData[currentCycle].salaryJini = resolvedJini;
+            monthlyData[currentCycle].salaryGeuni = resolvedGeuni;
           }
 
           setSyncStatus("online");
