@@ -1950,59 +1950,75 @@
       let salaryDebounce = null;
 
       // ── 유틸 ──
+      // ── 실제 월급 지급일 계산 ──
+      // 25일이 토 → 24일(금), 일 → 23일(금), 평일 → 25일
+      function actualPayday(year, month) {
+        const d = new Date(year, month - 1, 25); // month는 1-based
+        const wd = d.getDay(); // 0=일, 6=토
+        if (wd === 6) return 24; // 토 → 금(24)
+        if (wd === 0) return 23; // 일 → 금(23)
+        return 25;
+      }
+
+      // cycleKey 계산: 오늘이 실제월급일 이후면 다음달 키, 아니면 이번달 키
+      // cycleKey "2026-07" = 6월 월급일부터 7월 월급일 전날까지
       function getCycleKey(date) {
         const d = date || new Date();
-        if (d.getDate() >= 25) {
-          const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-          return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
+        const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+        const payday = actualPayday(y, m);
+        if (day >= payday) {
+          // 이번달 월급일 이후 → 다음달 키
+          const next = new Date(y, m, 1); // 다음달 1일
+          return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
         }
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        return `${y}-${String(m).padStart(2, "0")}`;
       }
-      // cycleKey "2026-07" → 해당 사이클 기간 "6/25 ~ 7/24"
+
+      // cycleKey "2026-07" → 시작: 6월 실제지급일, 끝: 7월 실제지급일-1
       function cycleKeyToRange(ck) {
         const [y, m] = ck.split("-").map(Number);
-        // 이 사이클은 (m-1)월 25일 ~ m월 24일
+        // 시작: (m-1)월 실제지급일
         const startM = m === 1 ? 12 : m - 1;
         const startY = m === 1 ? y - 1 : y;
-        return { startY, startM, endY: y, endM: m };
+        const startDay = actualPayday(startY, startM);
+        // 끝: m월 실제지급일 - 1
+        const endDay = actualPayday(y, m) - 1;
+        return { startY, startM, startDay, endY: y, endM: m, endDay };
       }
+
       function cycleKeyToLabel(ck) {
-        const { startY, startM, endY, endM } = cycleKeyToRange(ck);
+        const { startY, startM, startDay, endY, endM, endDay } = cycleKeyToRange(ck);
         if (startY === endY) {
-          return `${startM}/25 ~ ${endM}/24`;
+          return `${startM}/${startDay} ~ ${endM}/${endDay}`;
         }
-        return `${startM}/25 ~ ${endY}년 ${endM}/24`;
+        return `${startM}/${startDay} ~ ${endY}년 ${endM}/${endDay}`;
       }
+
       function getCycleLabel(date) {
         return cycleKeyToLabel(getCycleKey(date));
       }
+
       function getCycleDateRange() {
-        const now = new Date(),
-          day = now.getDate();
-        let sY, sM, eY, eM;
-        if (day >= 25) {
-          sY = now.getFullYear();
-          sM = now.getMonth();
-          const n = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-          eY = n.getFullYear();
-          eM = n.getMonth();
-        } else {
-          const p = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          sY = p.getFullYear();
-          sM = p.getMonth();
-          eY = now.getFullYear();
-          eM = now.getMonth();
-        }
-        return { text: `${sY}년 ${sM + 1}월 25일 ~ ${eY}년 ${eM + 1}월 24일` };
+        const ck = getCycleKey();
+        const { startY, startM, startDay, endY, endM, endDay } = cycleKeyToRange(ck);
+        return { text: `${startY}년 ${startM}월 ${startDay}일 ~ ${endY}년 ${endM}월 ${endDay}일` };
       }
+
       function getDaysUntilPayday() {
-        const now = new Date(),
-          day = now.getDate();
-        const next =
-          day < 25
-            ? new Date(now.getFullYear(), now.getMonth(), 25)
-            : new Date(now.getFullYear(), now.getMonth() + 1, 25);
-        return Math.ceil((next - now) / 86400000);
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth() + 1;
+        const payday = actualPayday(y, m);
+        const today = now.getDate();
+        let nextPayDate;
+        if (today < payday) {
+          nextPayDate = new Date(y, m - 1, payday);
+        } else {
+          // 이번달 지급일 지났으면 다음달
+          const nm = m === 12 ? 1 : m + 1;
+          const ny = m === 12 ? y + 1 : y;
+          nextPayDate = new Date(ny, nm - 1, actualPayday(ny, nm));
+        }
+        return Math.ceil((nextPayDate - now) / 86400000);
       }
       function computeAmt(item) {
         const j = state.salaryJini,
@@ -3156,24 +3172,24 @@
         document.getElementById("cb-period").textContent = range.text;
         const cr = document.getElementById("cycle-range");
         if (cr) cr.textContent = `현재 사이클: ${range.text}`;
-        const day = new Date().getDate();
-        if (day === 25) {
+        // 오늘이 실제 월급일인지 확인
+        const now = new Date();
+        const todayPayday = actualPayday(now.getFullYear(), now.getMonth() + 1);
+        const isPayday = now.getDate() === todayPayday;
+        if (isPayday) {
           document.getElementById("cb-dday").textContent = "🎉 오늘이 월급날!";
           banner.className = "cycle-banner fresh";
           document.getElementById("cb-emoji").textContent = "💰";
         } else if (daysLeft <= 3) {
-          document.getElementById("cb-dday").textContent =
-            `D-${daysLeft} 다음 월급날`;
+          document.getElementById("cb-dday").textContent = `D-${daysLeft} 다음 월급날`;
           banner.className = "cycle-banner soon";
           document.getElementById("cb-emoji").textContent = "⏰";
         } else if (daysLeft <= 10) {
-          document.getElementById("cb-dday").textContent =
-            `D-${daysLeft} 다음 월급날`;
+          document.getElementById("cb-dday").textContent = `D-${daysLeft} 다음 월급날`;
           banner.className = "cycle-banner mid";
           document.getElementById("cb-emoji").textContent = "📅";
         } else {
-          document.getElementById("cb-dday").textContent =
-            `D-${daysLeft} 다음 월급날`;
+          document.getElementById("cb-dday").textContent = `D-${daysLeft} 다음 월급날`;
           banner.className = "cycle-banner fresh";
           document.getElementById("cb-emoji").textContent = "💸";
         }
