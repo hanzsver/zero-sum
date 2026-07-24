@@ -2103,9 +2103,18 @@
       function getViewState() {
         const ck = viewingCycle;
         const m = monthlyData[ck] || {};
+        // salary: 해당 달 데이터 → 직전 달 → 기본값 순서 (이번달 값으로 오염 방지)
+        function prevCycleKey(c) {
+          const [y, mo] = c.split("-").map(Number);
+          const d = new Date(y, mo - 2, 1);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        }
+        const prev = monthlyData[prevCycleKey(ck)] || {};
+        const salaryJini = m.salaryJini || prev.salaryJini || 3150000;
+        const salaryGeuni = m.salaryGeuni || prev.salaryGeuni || 2610000;
         return {
-          salaryJini: m.salaryJini ?? state.salaryJini,
-          salaryGeuni: m.salaryGeuni ?? state.salaryGeuni,
+          salaryJini,
+          salaryGeuni,
           checks: m.checks || {},
           fixedChecks: m.fixedChecks || {},
           overrides: m.overrides || {},
@@ -2146,16 +2155,23 @@
             };
           }
 
-          // 이번 달 월급 인풋 동기화
-          const cur = monthlyData[currentCycle] || {};
-          if (cur.salaryJini) {
-            state.salaryJini = cur.salaryJini;
-            document.getElementById("salary-jini").value = cur.salaryJini;
+          // 월급 인풋 동기화: viewingCycle 기준 (현재 보고 있는 달)
+          const viewData = monthlyData[viewingCycle] || {};
+          // 현재 사이클 데이터 없으면 직전 사이클 fallback
+          function prevCycleOf(ck) {
+            const [y, m] = ck.split("-").map(Number);
+            const d = new Date(y, m - 2, 1);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
           }
-          if (cur.salaryGeuni) {
-            state.salaryGeuni = cur.salaryGeuni;
-            document.getElementById("salary-geuni").value = cur.salaryGeuni;
-          }
+          const prevData = monthlyData[prevCycleOf(viewingCycle)] || {};
+          const resolvedJ = viewData.salaryJini || prevData.salaryJini || state.salaryJini;
+          const resolvedG = viewData.salaryGeuni || prevData.salaryGeuni || state.salaryGeuni;
+          state.salaryJini = resolvedJ;
+          state.salaryGeuni = resolvedG;
+          const jiEl = document.getElementById("salary-jini");
+          const gnEl = document.getElementById("salary-geuni");
+          if (jiEl) jiEl.value = resolvedJ;
+          if (gnEl) gnEl.value = resolvedG;
 
           setSyncStatus("online");
           renderAll();
