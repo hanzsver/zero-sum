@@ -105,8 +105,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 20px;
-        height: 52px;
+        padding: 14px 20px;
       }
       .nav-logo {
         font-size: 17px;
@@ -158,9 +157,6 @@
       .tabs {
         background: var(--surface);
         border-bottom: 1px solid var(--border);
-        position: sticky;
-        top: 52px;
-        z-index: 99;
       }
       .tabs-inner {
         max-width: 480px;
@@ -1058,7 +1054,41 @@
       .ledger-cat-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
       .ledger-cat-note { font-size: 11px; color: var(--text3); }
       .ledger-cat-right { text-align: right; flex-shrink: 0; }
+      /* ── 이체미션 설명 수정 ── */
+      .amt-desc-input {
+        width: 100%; padding: 8px 10px;
+        border: 1.5px solid var(--border2); border-radius: var(--radius-xs);
+        font-size: 13px; font-family: inherit; outline: none; color: var(--text);
+      }
+      .amt-desc-input:focus { border-color: var(--primary); }
+      .override-desc-line { color: var(--primary) !important; }
+      /* ── 고정비 예산 수정 ── */
+      .ledger-budget-wrap { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
       .ledger-budget { font-size: 13px; color: var(--text2); font-weight: 500; }
+      .ledger-budget.overridden { color: var(--warning); font-weight: 700; }
+      .ledger-budget-edit-btn {
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 1px solid var(--border2); background: var(--surface2);
+        color: var(--text3); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.12s; padding: 0; flex-shrink: 0;
+      }
+      .ledger-budget-edit-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-mid); }
+      .ledger-budget-reset-btn { font-size: 13px; color: var(--warning); background: none; border: none; cursor: pointer; padding: 0 2px; line-height: 1; }
+      .ledger-budget-edit-row {
+        display: flex; align-items: center; gap: 6px;
+        padding: 8px 0 6px; border-top: 1px dashed var(--border); margin-bottom: 2px;
+      }
+      .ledger-budget-input {
+        flex: 1; padding: 7px 10px; border: 1.5px solid var(--primary);
+        border-radius: var(--radius-xs); font-size: 13px; font-family: inherit;
+        outline: none; text-align: right;
+      }
+      .ledger-budget-cancel {
+        padding: 7px 10px; border-radius: var(--radius-xs);
+        border: 1px solid var(--border2); background: var(--surface);
+        color: var(--text2); font-size: 12px; font-family: inherit; cursor: pointer;
+      }
       .ledger-actual { font-size: 16px; font-weight: 800; margin-top: 2px; }
       .ledger-actual.ok { color: var(--primary); }
       .ledger-actual.over { color: var(--danger); }
@@ -1225,44 +1255,33 @@
 
 
       /* ── 월 네비게이터 ── */
-      /* nav 바로 아래 sticky로 붙어있는 서브 헤더처럼 동작 */
-      .month-nav-wrap {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        position: sticky;
-        top: 100px; /* nav 52 + tabs 48 */
-        z-index: 90;
-      }
       .month-nav {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 0 20px; height: 48px;
+        padding: 12px 16px; background: var(--surface);
+        border-bottom: 1px solid var(--border);
         max-width: 480px; margin: 0 auto;
       }
       .month-nav-btn {
-        width: 32px; height: 32px; border-radius: 50%;
-        border: none; background: transparent;
-        color: var(--text3); font-size: 20px; cursor: pointer;
+        width: 36px; height: 36px; border-radius: 50%;
+        border: 1.5px solid var(--border2); background: var(--surface2);
+        color: var(--text2); font-size: 16px; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
-        transition: all 0.12s; flex-shrink: 0; font-weight: 300;
-        line-height: 1;
+        transition: all 0.12s; flex-shrink: 0;
       }
-      .month-nav-btn:hover { color: var(--primary); background: var(--primary-light); }
-      .month-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
-      .month-nav-center { display: flex; align-items: center; gap: 8px; }
+      .month-nav-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+      .month-nav-btn:disabled { opacity: 0.3; pointer-events: none; }
       .month-nav-label {
-        font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px;
+        font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.3px;
       }
-      .month-nav-label.past { color: var(--text2); font-weight: 600; }
+      .month-nav-label.past { color: var(--text2); }
       .month-nav-badge {
-        font-size: 10px; font-weight: 700; padding: 2px 7px;
-        border-radius: 20px;
-        background: var(--primary); color: #fff;
+        font-size: 11px; font-weight: 600; padding: 2px 8px;
+        border-radius: 20px; margin-left: 8px;
+        background: var(--primary-light); color: var(--primary);
       }
       .month-readonly-banner {
-        background: var(--primary-light);
-        border-top: 1px solid var(--primary-mid);
-        padding: 7px 20px; font-size: 12px; color: var(--primary);
-        font-weight: 500;
+        background: var(--surface2); border-bottom: 1px solid var(--border);
+        padding: 8px 20px; font-size: 12px; color: var(--text2);
         text-align: center; max-width: 480px; margin: 0 auto;
       }
       @keyframes pop {
@@ -1344,25 +1363,20 @@
         </div>
       </div>
 
-      <!-- 공용 월 네비게이터 (탭 콘텐츠 위 sticky) -->
-      <div class="month-nav-wrap" id="global-month-nav-wrap" style="display:none">
-        <div class="month-nav">
-          <button class="month-nav-btn" id="global-nav-prev" onclick="navigateMonth(-1)">‹</button>
-          <div class="month-nav-center">
-            <span class="month-nav-label" id="global-nav-label">—</span>
-            <span class="month-nav-badge" id="global-nav-badge" style="display:none">이번 달</span>
-          </div>
-          <button class="month-nav-btn" id="global-nav-next" onclick="navigateMonth(1)">›</button>
-        </div>
-        <div class="month-readonly-banner" id="global-readonly-banner" style="display:none">
-          📅 과거 기록 열람 중 — 체크 및 금액 수정이 가능해요
-        </div>
-      </div>
-
       <div class="content">
         <!-- HOME -->
         <div class="page active" id="page-home">
-
+          <div id="home-month-nav" class="month-nav">
+            <button class="month-nav-btn" id="home-nav-prev" onclick="navigateMonth(-1,'home')">‹</button>
+            <div style="display:flex;align-items:center">
+              <span class="month-nav-label" id="home-nav-label">—</span>
+              <span class="month-nav-badge" id="home-nav-badge" style="display:none">이번 달</span>
+            </div>
+            <button class="month-nav-btn" id="home-nav-next" onclick="navigateMonth(1,'home')">›</button>
+          </div>
+          <div class="month-readonly-banner" id="home-readonly-banner" style="display:none">
+            📋 과거 기록 보기 모드 — 수정이 불가능해요
+          </div>
           <div id="cycle-banner" class="cycle-banner fresh">
             <div class="cb-left">
               <div class="cb-period" id="cb-period">—</div>
@@ -1503,6 +1517,17 @@
 
         <!-- MISSION -->
         <div class="page" id="page-mission">
+          <div class="month-nav" id="mission-month-nav">
+            <button class="month-nav-btn" id="mission-nav-prev" onclick="navigateMonth(-1,'mission')">‹</button>
+            <div style="display:flex;align-items:center">
+              <span class="month-nav-label" id="mission-nav-label">—</span>
+              <span class="month-nav-badge" id="mission-nav-badge" style="display:none">이번 달</span>
+            </div>
+            <button class="month-nav-btn" id="mission-nav-next" onclick="navigateMonth(1,'mission')">›</button>
+          </div>
+          <div class="month-readonly-banner" id="mission-readonly-banner" style="display:none">
+            📋 과거 기록 보기 모드 — 체크 및 금액 수정이 불가능해요
+          </div>
           <div class="user-toggle">
             <button
               class="user-btn jini active"
@@ -1626,6 +1651,17 @@
 
         <!-- FIXED -->
         <div class="page" id="page-fixed">
+          <div class="month-nav" id="fixed-month-nav">
+            <button class="month-nav-btn" id="fixed-nav-prev" onclick="navigateMonth(-1,'fixed')">‹</button>
+            <div style="display:flex;align-items:center">
+              <span class="month-nav-label" id="fixed-nav-label">—</span>
+              <span class="month-nav-badge" id="fixed-nav-badge" style="display:none">이번 달</span>
+            </div>
+            <button class="month-nav-btn" id="fixed-nav-next" onclick="navigateMonth(1,'fixed')">›</button>
+          </div>
+          <div class="month-readonly-banner" id="fixed-readonly-banner" style="display:none">
+            📋 과거 기록 보기 모드
+          </div>
           <div class="card" style="padding: 0; overflow: hidden;">
             <div id="fixed-list"></div>
           </div>
@@ -1817,9 +1853,9 @@
           accountNo: "7942-32-43389",
           accountHolder: "이충근",
           rule: "fixed",
-          baseAmt: 300000,
-          desc: "식비 20 + 데이트비 10 (징니 부담분)",
-          tag: "transfer",
+          baseAmt: 350000,
+          desc: "집에서 먹는 식비 25 + 커플 데이트비 10",
+          tag: "auto",
         },
         {
           user: "jini",
@@ -1895,9 +1931,9 @@
           accountNo: "7942-32-43389",
           accountHolder: "이충근",
           rule: "fixed",
-          baseAmt: 300000,
-          desc: "식비 20 + 데이트비 10 (그니 부담분)",
-          tag: "transfer",
+          baseAmt: 350000,
+          desc: "집에서 먹는 식비 25 + 커플 데이트비 10",
+          tag: "auto",
         },
         {
           user: "geuni",
@@ -1940,85 +1976,60 @@
         cycleKey: getCycleKey(),
         overrides: {},
         ledger: {},
+        ledgerBudgets: {},
       };
       // 월별 히스토리 저장소: { "2026-06": { checks, fixedChecks, overrides, ledger, salaryJini, salaryGeuni } }
       let monthlyData = {};
       // 현재 보고 있는 사이클 (기본: 이번 달)
       let viewingCycle = getCycleKey();
-      const FIRST_CYCLE = "2026-07"; // 데이터 시작점 (6/25~7/23)
+      const FIRST_CYCLE = "2026-06"; // 데이터 시작점
       let dbUnsubscribe = null;
       let salaryDebounce = null;
 
       // ── 유틸 ──
-      // ── 실제 월급 지급일 계산 ──
-      // 25일이 토 → 24일(금), 일 → 23일(금), 평일 → 25일
-      function actualPayday(year, month) {
-        const d = new Date(year, month - 1, 25); // month는 1-based
-        const wd = d.getDay(); // 0=일, 6=토
-        if (wd === 6) return 24; // 토 → 금(24)
-        if (wd === 0) return 23; // 일 → 금(23)
-        return 25;
-      }
-
-      // cycleKey 계산: 오늘이 실제월급일 이후면 다음달 키, 아니면 이번달 키
-      // cycleKey "2026-07" = 6월 월급일부터 7월 월급일 전날까지
       function getCycleKey(date) {
         const d = date || new Date();
-        const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
-        const payday = actualPayday(y, m);
-        if (day >= payday) {
-          // 이번달 월급일 이후 → 다음달 키
-          const next = new Date(y, m, 1); // 다음달 1일
-          return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+        if (d.getDate() >= 25) {
+          const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+          return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
         }
-        return `${y}-${String(m).padStart(2, "0")}`;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       }
-
-      // cycleKey "2026-07" → 시작: 6월 실제지급일, 끝: 7월 실제지급일-1
-      function cycleKeyToRange(ck) {
-        const [y, m] = ck.split("-").map(Number);
-        // 시작: (m-1)월 실제지급일
-        const startM = m === 1 ? 12 : m - 1;
-        const startY = m === 1 ? y - 1 : y;
-        const startDay = actualPayday(startY, startM);
-        // 끝: m월 실제지급일 - 1
-        const endDay = actualPayday(y, m) - 1;
-        return { startY, startM, startDay, endY: y, endM: m, endDay };
-      }
-
-      function cycleKeyToLabel(ck) {
-        const { startY, startM, startDay, endY, endM, endDay } = cycleKeyToRange(ck);
-        if (startY === endY) {
-          return `${startM}/${startDay} ~ ${endM}/${endDay}`;
-        }
-        return `${startM}/${startDay} ~ ${endY}년 ${endM}/${endDay}`;
-      }
-
       function getCycleLabel(date) {
-        return cycleKeyToLabel(getCycleKey(date));
-      }
-
-      function getCycleDateRange() {
-        const ck = getCycleKey();
-        const { startY, startM, startDay, endY, endM, endDay } = cycleKeyToRange(ck);
-        return { text: `${startY}년 ${startM}월 ${startDay}일 ~ ${endY}년 ${endM}월 ${endDay}일` };
-      }
-
-      function getDaysUntilPayday() {
-        const now = new Date();
-        const y = now.getFullYear(), m = now.getMonth() + 1;
-        const payday = actualPayday(y, m);
-        const today = now.getDate();
-        let nextPayDate;
-        if (today < payday) {
-          nextPayDate = new Date(y, m - 1, payday);
-        } else {
-          // 이번달 지급일 지났으면 다음달
-          const nm = m === 12 ? 1 : m + 1;
-          const ny = m === 12 ? y + 1 : y;
-          nextPayDate = new Date(ny, nm - 1, actualPayday(ny, nm));
+        const d = date || new Date();
+        if (d.getDate() >= 25) {
+          const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+          return `${n.getFullYear()}년 ${n.getMonth() + 1}월 결산`;
         }
-        return Math.ceil((nextPayDate - now) / 86400000);
+        return `${d.getFullYear()}년 ${d.getMonth() + 1}월 결산`;
+      }
+      function getCycleDateRange() {
+        const now = new Date(),
+          day = now.getDate();
+        let sY, sM, eY, eM;
+        if (day >= 25) {
+          sY = now.getFullYear();
+          sM = now.getMonth();
+          const n = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+          eY = n.getFullYear();
+          eM = n.getMonth();
+        } else {
+          const p = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          sY = p.getFullYear();
+          sM = p.getMonth();
+          eY = now.getFullYear();
+          eM = now.getMonth();
+        }
+        return { text: `${sY}년 ${sM + 1}월 25일 ~ ${eY}년 ${eM + 1}월 24일` };
+      }
+      function getDaysUntilPayday() {
+        const now = new Date(),
+          day = now.getDate();
+        const next =
+          day < 25
+            ? new Date(now.getFullYear(), now.getMonth(), 25)
+            : new Date(now.getFullYear(), now.getMonth() + 1, 25);
+        return Math.ceil((next - now) / 86400000);
       }
       function computeAmt(item) {
         const j = state.salaryJini,
@@ -2099,6 +2110,7 @@
           fixedChecks: m.fixedChecks || {},
           overrides: m.overrides || {},
           ledger: m.ledger || {},
+          ledgerBudgets: m.ledgerBudgets || {},
         };
       }
 
@@ -2134,30 +2146,15 @@
             };
           }
 
-          // 이번 달 월급 인풋 동기화 — 없으면 직전 사이클 월급 사용
+          // 이번 달 월급 인풋 동기화
           const cur = monthlyData[currentCycle] || {};
-
-          // 직전 사이클 키 계산 (currentCycle "2026-07" → "2026-06")
-          function prevCycleKey(ck) {
-            const [y, m] = ck.split("-").map(Number);
-            const d = new Date(y, m - 2, 1); // m-1이 현재달 0-based이므로 -2
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          if (cur.salaryJini) {
+            state.salaryJini = cur.salaryJini;
+            document.getElementById("salary-jini").value = cur.salaryJini;
           }
-          const prev = monthlyData[prevCycleKey(currentCycle)] || {};
-
-          const resolvedJini = cur.salaryJini || prev.salaryJini || state.salaryJini;
-          const resolvedGeuni = cur.salaryGeuni || prev.salaryGeuni || state.salaryGeuni;
-
-          state.salaryJini = resolvedJini;
-          state.salaryGeuni = resolvedGeuni;
-          document.getElementById("salary-jini").value = resolvedJini;
-          document.getElementById("salary-geuni").value = resolvedGeuni;
-
-          // 이번 달 데이터에 월급이 없었다면 직전달 값으로 채워두기 (로컬만)
-          if (!cur.salaryJini && resolvedJini) {
-            if (!monthlyData[currentCycle]) monthlyData[currentCycle] = {};
-            monthlyData[currentCycle].salaryJini = resolvedJini;
-            monthlyData[currentCycle].salaryGeuni = resolvedGeuni;
+          if (cur.salaryGeuni) {
+            state.salaryGeuni = cur.salaryGeuni;
+            document.getElementById("salary-geuni").value = cur.salaryGeuni;
           }
 
           setSyncStatus("online");
@@ -2168,19 +2165,23 @@
         });
       }
 
-      // viewingCycle 기준으로 월별 데이터 push (과거달도 수정 가능)
+      // 이번 달 데이터만 push (월별 경로에 저장)
       async function pushState(partial) {
+        if (!isCurrentCycle()) return; // 과거 달은 쓰기 불가
         setSyncStatus("syncing");
-        const cycle = viewingCycle;
+        const cycle = getCycleKey();
         try {
+          // monthly/{cycle}/ 하위에 저장
           const monthPartial = {};
           for (const k of ["checks","fixedChecks","overrides","ledger","salaryJini","salaryGeuni"]) {
             if (partial[k] !== undefined) monthPartial[`monthly/${cycle}/${k}`] = partial[k];
           }
+          // 정산/채무는 공통 경로
           if (partial.settlements !== undefined) monthPartial["settlements"] = partial.settlements;
           if (partial.debts !== undefined) monthPartial["debts"] = partial.debts;
-          monthPartial["cycleKey"] = getCycleKey(); // 현재 사이클 기준 유지
+          monthPartial["cycleKey"] = cycle;
           await update(dbRef(COUPLE_PATH), monthPartial);
+          // 로컬 monthlyData 동기화
           if (!monthlyData[cycle]) monthlyData[cycle] = {};
           for (const k of Object.keys(partial)) {
             if (k !== "settlements" && k !== "debts") monthlyData[cycle][k] = partial[k];
@@ -2268,45 +2269,39 @@
         renderSettleSummary();
       }
 
-      // ── 월 네비게이터 업데이트 (공용 단일 네비) ──
+      // ── 월 네비게이터 업데이트 ──
       function updateMonthNavs() {
+        const tabs = ["home", "mission", "fixed"];
         const ck = viewingCycle;
         const isCurrent = isCurrentCycle();
         const [y, m] = ck.split("-").map(Number);
-        const label = cycleKeyToLabel(ck);
-
-        // 공용 네비 업데이트
-        const wrap = document.getElementById("global-month-nav-wrap");
-        const labelEl = document.getElementById("global-nav-label");
-        const badge = document.getElementById("global-nav-badge");
-        const prev = document.getElementById("global-nav-prev");
-        const next = document.getElementById("global-nav-next");
-        const banner = document.getElementById("global-readonly-banner");
-
-        // 현재 활성 탭 확인해서 홈/이체미션/고정비일때만 네비 표시
-        const activePage = document.querySelector(".page.active");
-        const showNav = activePage && ["page-home","page-mission","page-fixed"].includes(activePage.id);
-        if (wrap) wrap.style.display = showNav ? "block" : "none";
-
-        if (labelEl) { labelEl.textContent = label; labelEl.className = "month-nav-label" + (isCurrent ? "" : " past"); }
-        if (badge) badge.style.display = isCurrent ? "inline" : "none";
-        if (prev) prev.disabled = ck <= FIRST_CYCLE;
-        if (next) next.disabled = isCurrent;
-        if (banner) banner.style.display = (showNav && !isCurrent) ? "block" : "none";
-
-        // nav 상단 월 텍스트 동기화
+        const label = `${y}년 ${m}월`;
+        tabs.forEach(tab => {
+          const labelEl = document.getElementById(`${tab}-nav-label`);
+          const badge = document.getElementById(`${tab}-nav-badge`);
+          const prev = document.getElementById(`${tab}-nav-prev`);
+          const next = document.getElementById(`${tab}-nav-next`);
+          const banner = document.getElementById(`${tab}-readonly-banner`);
+          if (labelEl) { labelEl.textContent = label; labelEl.className = "month-nav-label" + (isCurrent ? "" : " past"); }
+          if (badge) badge.style.display = isCurrent ? "inline" : "none";
+          if (prev) prev.disabled = ck <= FIRST_CYCLE;
+          if (next) next.disabled = isCurrent;
+          if (banner) banner.style.display = isCurrent ? "none" : "block";
+        });
+        // nav 상단 월 텍스트도 동기화
         const navMonth = document.getElementById("nav-month");
-        if (navMonth) navMonth.textContent = cycleKeyToLabel(ck);
+        if (navMonth) navMonth.textContent = `${y}년 ${m}월`;
       }
 
       // ── 월 이동 ──
-      window.navigateMonth = (dir) => {
+      window.navigateMonth = (dir, tab) => {
         const [y, m] = viewingCycle.split("-").map(Number);
         const date = new Date(y, m - 1 + dir, 1);
         const newCycle = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
         if (newCycle < FIRST_CYCLE) return;
         if (newCycle > getCycleKey()) return;
         viewingCycle = newCycle;
+        // 뷰잉 사이클의 월급을 인풋에 반영
         const vs = getViewState();
         state.salaryJini = vs.salaryJini;
         state.salaryGeuni = vs.salaryGeuni;
@@ -2315,6 +2310,8 @@
         if (jiEl) jiEl.value = vs.salaryJini;
         if (gnEl) gnEl.value = vs.salaryGeuni;
         renderAll();
+        // 탭 포커스 이동
+        showPage(tab, document.querySelector(`.tab[onclick*="${tab}"]`));
       };
 
       function renderHome() {
@@ -2409,8 +2406,9 @@
         const jItems = BUDGET_RULES.filter((x) => x.user === "jini");
         const gItems = BUDGET_RULES.filter((x) => x.user === "geuni");
         const vs = getViewState();
-        renderItems(jItems, document.getElementById("list-jini"), "j_", "jini", vs, false);
-        renderItems(gItems, document.getElementById("list-geuni"), "g_", "geuni", vs, false);
+        const readonly = !isCurrentCycle();
+        renderItems(jItems, document.getElementById("list-jini"), "j_", "jini", vs, readonly);
+        renderItems(gItems, document.getElementById("list-geuni"), "g_", "geuni", vs, readonly);
       }
 
       function renderItems(items, container, prefix, user, vs, readonly) {
@@ -2438,14 +2436,15 @@
                 <span class="acct-copy">복사</span>
                </div>`
             : "";
-          const descHtml = item.desc
-            ? item.desc.split("\n").map(l => `<div class="check-desc-line">${l}</div>`).join("")
-            : "";
+          // descHtml은 effectiveDescHtml로 대체됨 (override 후 처리)
           // 수정 버튼 (override 시 원래금액 표시 + 초기화 버튼)
-          const overrideMemo = isOverridden && state.overrides[key]?.memo
-            ? state.overrides[key].memo : "";
+          const overrideMemo = typeof _ov === "object" ? (_ov?.memo || "") : "";
+          const overrideDesc = typeof _ov === "object" ? (_ov?.desc || "") : "";
+          const effectiveDescHtml = overrideDesc
+            ? overrideDesc.split("\n").map(l => `<div class="check-desc-line override-desc-line">${l}</div>`).join("")
+            : (item.desc ? item.desc.split("\n").map(l => `<div class="check-desc-line">${l}</div>`).join("") : "");
           const overrideBadge = isOverridden
-            ? `<span class="override-badge">수정됨 <span class="override-orig">(원래 ${fmt(baseAmt)})</span>${overrideMemo ? `<span class="override-memo"> · ${overrideMemo}</span>` : ""}</span>`
+            ? `<div class="override-badge">수정됨 <span class="override-orig">(원래 ${fmt(baseAmt)})</span>${overrideMemo ? `<span class="override-memo"> · ${overrideMemo}</span>` : ""}</div>`
             : "";
           const el = document.createElement("div");
           el.className = `check-item ${user}-item ${done ? "done" : ""} ${readonly ? "readonly" : ""}`;
@@ -2463,11 +2462,12 @@
           </div>
         </div>
         ${overrideBadge}
-        <div class="check-desc">${descHtml}</div>
+        <div class="check-desc">${effectiveDescHtml}</div>
         <div class="check-footer">${bankChip}${acctHtml}</div>
         <div class="check-amt-edit" id="amt-edit-${key}" style="display:none">
           <input type="number" class="amt-edit-input" id="amt-input-${key}" value="${amt}" step="1000" placeholder="이번 달 금액">
-          <input type="text" class="amt-memo-input" id="amt-memo-${key}" value="${isOverridden && state.overrides[key]?.memo ? state.overrides[key].memo : ''}" placeholder="비고 (선택)">
+          <input type="text" class="amt-desc-input" id="amt-desc-${key}" value="${overrideDesc || (item.desc || '').replace(/\n/g, ' ')}" placeholder="설명 수정 (선택)">
+          <input type="text" class="amt-memo-input" id="amt-memo-${key}" value="${overrideMemo}" placeholder="비고 (선택)">
           <div class="amt-edit-btns">
             <button class="amt-edit-save" onclick="saveAmtEdit('${key}')">저장</button>
             <button class="amt-edit-cancel" onclick="cancelAmtEdit('${key}')">취소</button>
@@ -2513,8 +2513,8 @@
           accountNo: "7942-32-43389",
           bank: "카카오뱅크",
           categories: [
-            { id: "food",   name: "식비",     budget: 200000, day: null, fixed: false, note: "마트 장보기 + 배달 (각 10만씩)" },
-            { id: "date",   name: "데이트비", budget: 100000, day: null, fixed: false, note: "월 1회 데이트 (각 5만씩)" },
+            { id: "food",   name: "식비",     budget: 500000, day: null, fixed: false, note: "마트 장보기 + 배달" },
+            { id: "date",   name: "데이트비", budget: 200000, day: null, fixed: false, note: "월 1회 데이트" },
           ],
         },
       ];
@@ -2523,7 +2523,7 @@
         const wrap = document.getElementById("fixed-list");
         wrap.innerHTML = "";
         const vs = getViewState();
-        const readonly = false;
+        const readonly = !isCurrentCycle();
         LEDGER_ACCOUNTS.forEach(account => {
           const ledger = vs.ledger || {};
           const accLedger = ledger[account.id] || {};
@@ -2546,6 +2546,16 @@
             const diff = hasActual ? cat.budget - actual : null;
             const over = diff !== null && diff < 0;
             const pct = hasActual ? Math.min(100, Math.round(actual / cat.budget * 100)) : 0;
+
+            // 이번 달 예산 override 적용
+            const budgetKey = `${account.id}:${cat.id}`;
+            const effectiveBudget = vs.ledgerBudgets?.[budgetKey] !== undefined
+              ? vs.ledgerBudgets[budgetKey] : cat.budget;
+            const isBudgetOverridden = vs.ledgerBudgets?.[budgetKey] !== undefined;
+            // effectiveBudget 기준으로 diff/pct 재계산
+            const eDiff = hasActual ? effectiveBudget - actual : null;
+            const eOver = eDiff !== null && eDiff < 0;
+            const ePct = hasActual ? Math.min(100, Math.round(actual / effectiveBudget * 100)) : 0;
 
             const catEl = document.createElement("div");
             catEl.className = "ledger-cat" + (cat.fixed ? " ledger-fixed" : "");
@@ -2572,19 +2582,30 @@
                   ${cat.day ? `<div class="ledger-cat-note">매월 ${cat.day}일 자동이체</div>` : ""}
                 </div>
                 <div class="ledger-cat-right">
-                  <div class="ledger-budget">${fmt(cat.budget)}</div>
-                  ${hasActual ? `<div class="ledger-actual ${over ? "over" : "ok"}">${fmt(actual)}</div>` : ""}
+                  <div class="ledger-budget-wrap">
+                    <span class="ledger-budget${isBudgetOverridden ? " overridden" : ""}">${fmt(effectiveBudget)}</span>
+                    ${!cat.fixed ? `<button class="ledger-budget-edit-btn" onclick="startBudgetEdit('${account.id}','${cat.id}',${effectiveBudget})" title="예산 수정">
+                      <svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M7.5 1.5l2 2L3 10H1V8L7.5 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+                    </button>` : ""}
+                    ${isBudgetOverridden ? `<button class="ledger-budget-reset-btn" onclick="resetBudget('${account.id}','${cat.id}')" title="원래대로">↩</button>` : ""}
+                  </div>
+                  ${hasActual ? `<div class="ledger-actual ${eOver ? "over" : "ok"}">${fmt(actual)}</div>` : ""}
                 </div>
+              </div>
+              <div class="ledger-budget-edit-row" id="budget-edit-${account.id}-${cat.id}" style="display:none">
+                <input type="number" class="ledger-budget-input" id="budget-input-${account.id}-${cat.id}" value="${effectiveBudget}" step="10000" placeholder="이번 달 예산">
+                <button class="ledger-add-btn" onclick="saveBudget('${account.id}','${cat.id}')">저장</button>
+                <button class="ledger-budget-cancel" onclick="cancelBudgetEdit('${account.id}','${cat.id}')">취소</button>
               </div>
               ${hasActual ? `
               <div class="ledger-bar-wrap">
-                <div class="ledger-bar-bg"><div class="ledger-bar-fill ${over ? "over" : ""}" style="width:${pct}%"></div></div>
-                <span class="ledger-diff ${over ? "over" : "ok"}">${over ? "+" + fmt(-diff) + " 초과" : fmt(diff) + " 여유"}</span>
+                <div class="ledger-bar-bg"><div class="ledger-bar-fill ${eOver ? "over" : ""}" style="width:${ePct}%"></div></div>
+                <span class="ledger-diff ${eOver ? "over" : "ok"}">${eOver ? "+" + fmt(-eDiff) + " 초과" : fmt(eDiff) + " 여유"}</span>
               </div>` : ""}
               ${items.length ? `<div class="ledger-items">${itemsHtml}</div>` : ""}
               ${readonly ? "" : `<div class="ledger-input-row" id="ledger-input-${account.id}-${cat.id}">`}
               ${readonly ? "" : cat.fixed
-                  ? `<button class="ledger-confirm-btn ${hasActual ? "confirmed" : ""}" onclick="toggleLedgerFixed('${account.id}','${cat.id}',${cat.budget})">
+                  ? `<button class="ledger-confirm-btn ${hasActual ? "confirmed" : ""}" onclick="toggleLedgerFixed('${account.id}','${cat.id}',${effectiveBudget})">
                       ${hasActual ? "✓ 납부 확인됨" : "납부 확인"}
                     </button>`
                   : `<div class="ledger-type-row">
@@ -2602,7 +2623,10 @@
           });
 
           // 섹션 합계
-          const totalBudget = account.categories.reduce((s, c) => s + c.budget, 0);
+          const totalBudget = account.categories.reduce((s, c) => {
+            const bk = `${account.id}:${c.id}`;
+            return s + (vs.ledgerBudgets?.[bk] !== undefined ? vs.ledgerBudgets[bk] : c.budget);
+          }, 0);
           const totalActual = account.categories.reduce((s, c) => {
             const d = (accLedger[c.id] || {});
             return s + (d.actual !== null && d.actual !== undefined ? d.actual : 0);
@@ -2775,7 +2799,8 @@
 
       // ── 액션 함수들 (window에 노출) ──
       window.toggleCheck = async (key, user) => {
-        const ck = viewingCycle;
+        if (!isCurrentCycle()) return;
+        const ck = getCycleKey();
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const cur = monthlyData[ck].checks || {};
         monthlyData[ck].checks = { ...cur, [key]: !cur[key] };
@@ -2888,14 +2913,16 @@
       window.saveAmtEdit = async (key) => {
         const input = document.getElementById(`amt-input-${key}`);
         const memoInput = document.getElementById(`amt-memo-${key}`);
+        const descInput = document.getElementById(`amt-desc-${key}`);
         const val = parseInt(input?.value);
         const memo = memoInput?.value.trim() || "";
+        const desc = descInput?.value.trim() || "";
         if (isNaN(val) || val < 0) { showToast("⚠️ 올바른 금액을 입력해주세요"); return; }
         const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
-        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo } };
+        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo, desc } };
         renderChecklist(); renderHome();
-        showToast("✅ 이번 달 금액 수정됨");
+        showToast("✅ 수정됨");
         await pushState({ overrides: monthlyData[ck].overrides });
       };
       window.resetAmtEdit = async (key) => {
@@ -2909,9 +2936,44 @@
         await pushState({ overrides: monthlyData[ck].overrides });
       };
 
+      // ── 고정비 카테고리 예산 수정 ──
+      window.startBudgetEdit = (accId, catId, cur) => {
+        const row = document.getElementById(`budget-edit-${accId}-${catId}`);
+        if (row) row.style.display = "flex";
+        const inp = document.getElementById(`budget-input-${accId}-${catId}`);
+        if (inp) { inp.value = cur; inp.focus(); inp.select(); }
+      };
+      window.cancelBudgetEdit = (accId, catId) => {
+        const row = document.getElementById(`budget-edit-${accId}-${catId}`);
+        if (row) row.style.display = "none";
+      };
+      window.saveBudget = async (accId, catId) => {
+        const inp = document.getElementById(`budget-input-${accId}-${catId}`);
+        const val = parseInt(inp?.value);
+        if (!val || val <= 0) { showToast("⚠️ 올바른 금액을 입력해주세요"); return; }
+        const ck = viewingCycle;
+        if (!monthlyData[ck]) monthlyData[ck] = {};
+        const budgets = { ...(monthlyData[ck].ledgerBudgets || {}) };
+        budgets[`${accId}:${catId}`] = val;
+        monthlyData[ck].ledgerBudgets = budgets;
+        renderFixed();
+        showToast("✅ 이번 달 예산 수정됨");
+        await pushState({ ledgerBudgets: monthlyData[ck].ledgerBudgets });
+      };
+      window.resetBudget = async (accId, catId) => {
+        const ck = viewingCycle;
+        if (!monthlyData[ck]?.ledgerBudgets) return;
+        const budgets = { ...monthlyData[ck].ledgerBudgets };
+        delete budgets[`${accId}:${catId}`];
+        monthlyData[ck].ledgerBudgets = budgets;
+        renderFixed();
+        showToast("↩️ 기본 예산으로 복원");
+        await pushState({ ledgerBudgets: monthlyData[ck].ledgerBudgets });
+      };
+
       // ── 고정비 가계부 액션 ──
       window.toggleLedgerFixed = async (accId, catId, budget) => {
-        const ck = viewingCycle;
+        const ck = getCycleKey();
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const ledger = { ...(monthlyData[ck].ledger || {}) };
         if (!ledger[accId]) ledger[accId] = {};
@@ -2934,7 +2996,7 @@
         const name = nameEl?.value.trim() || (typeEl?.value === "income" ? "수입" : "지출");
         const type = typeEl?.value || "expense"; // "expense" | "income"
         if (!amt || amt <= 0) { showToast("⚠️ 금액을 입력해주세요"); return; }
-        const ck = viewingCycle;
+        const ck = getCycleKey();
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const ledger = { ...(monthlyData[ck].ledger || {}) };
         if (!ledger[accId]) ledger[accId] = {};
@@ -2951,7 +3013,7 @@
       };
 
       window.deleteLedgerItem = async (accId, catId, idx) => {
-        const ck = viewingCycle;
+        const ck = getCycleKey();
         if (!monthlyData[ck]?.ledger?.[accId]?.[catId]) return;
         const ledger = { ...monthlyData[ck].ledger };
         ledger[accId][catId].items.splice(idx, 1);
@@ -2969,12 +3031,13 @@
       };
 
       window.onSalaryInput = () => {
+        if (!isCurrentCycle()) return;
         clearTimeout(salaryDebounce);
         salaryDebounce = setTimeout(async () => {
           const j = parseInt(document.getElementById("salary-jini").value) || 0;
           const g = parseInt(document.getElementById("salary-geuni").value) || 0;
           state.salaryJini = j; state.salaryGeuni = g;
-          const ck = viewingCycle;
+          const ck = getCycleKey();
           if (!monthlyData[ck]) monthlyData[ck] = {};
           monthlyData[ck].salaryJini = j; monthlyData[ck].salaryGeuni = g;
           renderHome(); renderChecklist();
@@ -2991,7 +3054,6 @@
           .forEach((t) => t.classList.remove("active"));
         document.getElementById("page-" + id).classList.add("active");
         if (tabEl) tabEl.classList.add("active");
-        updateMonthNavs();
       };
 
       window.switchUser = (user, btn) => {
@@ -3172,24 +3234,24 @@
         document.getElementById("cb-period").textContent = range.text;
         const cr = document.getElementById("cycle-range");
         if (cr) cr.textContent = `현재 사이클: ${range.text}`;
-        // 오늘이 실제 월급일인지 확인
-        const now = new Date();
-        const todayPayday = actualPayday(now.getFullYear(), now.getMonth() + 1);
-        const isPayday = now.getDate() === todayPayday;
-        if (isPayday) {
+        const day = new Date().getDate();
+        if (day === 25) {
           document.getElementById("cb-dday").textContent = "🎉 오늘이 월급날!";
           banner.className = "cycle-banner fresh";
           document.getElementById("cb-emoji").textContent = "💰";
         } else if (daysLeft <= 3) {
-          document.getElementById("cb-dday").textContent = `D-${daysLeft} 다음 월급날`;
+          document.getElementById("cb-dday").textContent =
+            `D-${daysLeft} 다음 월급날`;
           banner.className = "cycle-banner soon";
           document.getElementById("cb-emoji").textContent = "⏰";
         } else if (daysLeft <= 10) {
-          document.getElementById("cb-dday").textContent = `D-${daysLeft} 다음 월급날`;
+          document.getElementById("cb-dday").textContent =
+            `D-${daysLeft} 다음 월급날`;
           banner.className = "cycle-banner mid";
           document.getElementById("cb-emoji").textContent = "📅";
         } else {
-          document.getElementById("cb-dday").textContent = `D-${daysLeft} 다음 월급날`;
+          document.getElementById("cb-dday").textContent =
+            `D-${daysLeft} 다음 월급날`;
           banner.className = "cycle-banner fresh";
           document.getElementById("cb-emoji").textContent = "💸";
         }
