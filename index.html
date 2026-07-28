@@ -1059,7 +1059,51 @@
       }
       .ledger-cat-left { flex: 1; }
       .ledger-cat-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-      .ledger-cat-note { font-size: 11px; color: var(--text3); }
+      .ledger-cat-note { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+      /* note 편집 버튼 - 이체미션 연필 버튼과 동일한 스타일 */
+      .ledger-note-edit-btn {
+        width: 18px; height: 18px; border-radius: 50%;
+        border: 1px solid var(--border2); background: var(--surface2);
+        color: var(--text3); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: all 0.12s; flex-shrink: 0; padding: 0; font-size: 0; line-height: 0;
+        vertical-align: middle;
+      }
+      .ledger-note-edit-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-mid); }
+      .ledger-note-reset-btn {
+        width: 18px; height: 18px; border-radius: 50%;
+        border: 1px solid var(--border2); background: var(--surface2);
+        color: var(--text3); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: all 0.12s; flex-shrink: 0; padding: 0; font-size: 9px; line-height: 1;
+        vertical-align: middle;
+      }
+      .ledger-note-reset-btn:hover { background: var(--warning-light); color: var(--warning); border-color: var(--warning); }
+      .ledger-note-edit-row {
+        display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;
+      }
+      .ledger-note-input {
+        flex: 1; min-width: 120px; padding: 6px 10px;
+        border: 1.5px solid var(--primary); border-radius: var(--radius-xs);
+        font-size: 12px; font-family: inherit; outline: none; color: var(--text);
+        background: var(--surface);
+      }
+      .ledger-note-save-btn {
+        padding: 6px 12px; border-radius: var(--radius-xs); border: none;
+        background: var(--primary); color: #fff;
+        font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap;
+      }
+      .ledger-note-cancel-btn {
+        padding: 6px 10px; border-radius: var(--radius-xs);
+        border: 1px solid var(--border2); background: var(--surface);
+        color: var(--text2); font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap;
+      }
+      .ledger-note-add-btn {
+        font-size: 11px; color: var(--primary); background: none;
+        border: none; cursor: pointer; padding: 0;
+        display: inline-flex; align-items: center; gap: 3px;
+      }
+      .ledger-note-add-btn:hover { text-decoration: underline; }
       .ledger-cat-right { text-align: right; flex-shrink: 0; }
       .ledger-budget { font-size: 13px; color: var(--text2); font-weight: 500; }
       .ledger-actual { font-size: 16px; font-weight: 800; margin-top: 2px; }
@@ -2499,16 +2543,18 @@
         const effNote = (vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined) ? vs.ledgerNotes[nk] : catNote;
         const isOverridden = vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined;
         const sq = "'";
+        const pencilSvg = '<svg width="9" height="9" viewBox="0 0 11 11" fill="none"><path d="M7.5 1.5l2 2L3 10H1V8L7.5 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+        const resetSvg = '<svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1 5a4 4 0 1 1 .8 2.4M1 2v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         const editRow = '<div class="ledger-note-edit-row" id="note-edit-' + accId + '-' + catId + '" style="display:none">'
           + '<input type="text" class="ledger-note-input" id="note-input-' + accId + '-' + catId + '" value="' + effNote.replace(/"/g,"&quot;") + '" placeholder="설명 수정">'
-          + '<button class="ledger-add-btn" onclick="saveNote(' + sq + accId + sq + ',' + sq + catId + sq + ')">저장</button>'
-          + '<button class="ledger-budget-cancel" onclick="cancelNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">취소</button>'
+          + '<button class="ledger-note-save-btn" onclick="saveNote(' + sq + accId + sq + ',' + sq + catId + sq + ')">저장</button>'
+          + '<button class="ledger-note-cancel-btn" onclick="cancelNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">취소</button>'
           + '</div>';
         if (effNote) {
           return '<div class="ledger-cat-note" id="note-text-' + accId + '-' + catId + '">'
             + effNote
-            + ' <button class="ledger-note-edit-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')" title="수정">✏️</button>'
-            + (isOverridden ? '<button class="ledger-note-reset-btn" onclick="resetNote(' + sq + accId + sq + ',' + sq + catId + sq + ')">↩</button>' : '')
+            + '<button class="ledger-note-edit-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')" title="수정">' + pencilSvg + '</button>'
+            + (isOverridden ? '<button class="ledger-note-reset-btn" onclick="resetNote(' + sq + accId + sq + ',' + sq + catId + sq + ')" title="원래대로">' + resetSvg + '</button>' : '')
             + '</div>' + editRow;
         }
         return editRow + '<button class="ledger-note-add-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">+ 설명 추가</button>';
