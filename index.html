@@ -1009,6 +1009,13 @@
         border: 1.5px solid var(--primary); border-radius: var(--radius-xs);
         font-size: 13px; font-family: inherit; outline: none; text-align: right;
       }
+      .amt-desc-input {
+        width: 100%; padding: 8px 10px;
+        border: 1.5px solid var(--border2); border-radius: var(--radius-xs);
+        font-size: 13px; font-family: inherit; outline: none; color: var(--text);
+      }
+      .amt-desc-input:focus { border-color: var(--primary); }
+      .override-desc-line { color: var(--primary) !important; }
       .amt-memo-input {
         width: 100%; padding: 8px 10px;
         border: 1.5px solid var(--border2); border-radius: var(--radius-xs);
@@ -1052,32 +1059,7 @@
       }
       .ledger-cat-left { flex: 1; }
       .ledger-cat-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-      .ledger-cat-note {
-        font-size: 11px; color: var(--text3);
-        display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-      }
-      .ledger-note-edit-btn {
-        font-size: 10px; background: none; border: none;
-        cursor: pointer; padding: 0; opacity: 0.5; line-height: 1;
-      }
-      .ledger-note-edit-btn:hover { opacity: 1; }
-      .ledger-note-reset-btn {
-        font-size: 11px; color: var(--warning); background: none;
-        border: none; cursor: pointer; padding: 0;
-      }
-      .ledger-note-edit-row {
-        display: flex; align-items: center; gap: 6px;
-        margin-top: 4px; flex-wrap: wrap;
-      }
-      .ledger-note-input {
-        flex: 1; min-width: 120px; padding: 5px 8px;
-        border: 1.5px solid var(--primary); border-radius: var(--radius-xs);
-        font-size: 12px; font-family: inherit; outline: none;
-      }
-      .ledger-note-add-btn {
-        font-size: 11px; color: var(--primary); background: none;
-        border: none; cursor: pointer; padding: 0; margin-top: 2px;
-      }
+      .ledger-cat-note { font-size: 11px; color: var(--text3); }
       .ledger-cat-right { text-align: right; flex-shrink: 0; }
       .ledger-budget { font-size: 13px; color: var(--text2); font-weight: 500; }
       .ledger-actual { font-size: 16px; font-weight: 800; margin-top: 2px; }
@@ -1256,9 +1238,9 @@
       .month-nav-btn {
         width: 30px; height: 30px; border-radius: 50%;
         border: none; background: transparent;
-        color: var(--text3); font-size: 20px; font-weight: 300;
+        color: var(--text3); font-size: 20px; font-weight: 300; line-height: 1;
         cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.12s; flex-shrink: 0; line-height: 1;
+        transition: all 0.12s; flex-shrink: 0;
       }
       .month-nav-btn:hover { color: var(--primary); background: var(--primary-light); }
       .month-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
@@ -1269,8 +1251,7 @@
       .month-nav-label.past { color: var(--text2); font-weight: 600; }
       .month-nav-badge {
         font-size: 10px; font-weight: 700; padding: 2px 7px;
-        border-radius: 20px;
-        background: var(--primary); color: #fff;
+        border-radius: 20px; background: var(--primary); color: #fff;
       }
       @keyframes pop {
         0% {
@@ -1361,6 +1342,9 @@
               <span class="month-nav-badge" id="home-nav-badge" style="display:none">이번 달</span>
             </div>
             <button class="month-nav-btn" id="home-nav-next" onclick="navigateMonth(1,'home')">›</button>
+          </div>
+          <div class="month-readonly-banner" id="home-readonly-banner" style="display:none">
+            📋 과거 기록 보기 모드 — 수정이 불가능해요
           </div>
           <div id="cycle-banner" class="cycle-banner fresh">
             <div class="cb-left">
@@ -1504,11 +1488,14 @@
         <div class="page" id="page-mission">
           <div class="month-nav" id="mission-month-nav">
             <button class="month-nav-btn" id="mission-nav-prev" onclick="navigateMonth(-1,'mission')">‹</button>
-            <div class="month-nav-center">
+            <div style="display:flex;align-items:center">
               <span class="month-nav-label" id="mission-nav-label">—</span>
               <span class="month-nav-badge" id="mission-nav-badge" style="display:none">이번 달</span>
             </div>
             <button class="month-nav-btn" id="mission-nav-next" onclick="navigateMonth(1,'mission')">›</button>
+          </div>
+          <div class="month-readonly-banner" id="mission-readonly-banner" style="display:none">
+            📋 과거 기록 보기 모드 — 체크 및 금액 수정이 불가능해요
           </div>
           <div class="user-toggle">
             <button
@@ -1635,11 +1622,14 @@
         <div class="page" id="page-fixed">
           <div class="month-nav" id="fixed-month-nav">
             <button class="month-nav-btn" id="fixed-nav-prev" onclick="navigateMonth(-1,'fixed')">‹</button>
-            <div class="month-nav-center">
+            <div style="display:flex;align-items:center">
               <span class="month-nav-label" id="fixed-nav-label">—</span>
               <span class="month-nav-badge" id="fixed-nav-badge" style="display:none">이번 달</span>
             </div>
             <button class="month-nav-btn" id="fixed-nav-next" onclick="navigateMonth(1,'fixed')">›</button>
+          </div>
+          <div class="month-readonly-banner" id="fixed-readonly-banner" style="display:none">
+            📋 과거 기록 보기 모드
           </div>
           <div class="card" style="padding: 0; overflow: hidden;">
             <div id="fixed-list"></div>
@@ -1820,8 +1810,8 @@
           to: "토스뱅크",
           accountNo: "1002-6312-5060",
           accountHolder: "이충근",
-          rule: "residual_jini",
-          baseAmt: 222500,
+          rule: "fixed",
+          baseAmt: 100000,
           desc: "공동 비상금 · 현금 저축용",
           tag: "transfer",
         },
@@ -1898,8 +1888,8 @@
           to: "토스뱅크",
           accountNo: "1002-6312-5060",
           accountHolder: "이충근",
-          rule: "residual_geuni",
-          baseAmt: 102500,
+          rule: "fixed",
+          baseAmt: 100000,
           desc: "공동 비상금 · 현금 저축용",
           tag: "transfer",
         },
@@ -1955,42 +1945,27 @@
         cycleKey: getCycleKey(),
         overrides: {},
         ledger: {},
+        ledgerBudgets: {},
+        ledgerNotes: {},
       };
       // 월별 히스토리 저장소: { "2026-06": { checks, fixedChecks, overrides, ledger, salaryJini, salaryGeuni } }
       let monthlyData = {};
       // 현재 보고 있는 사이클 (기본: 이번 달)
       let viewingCycle = getCycleKey();
-      const FIRST_CYCLE = "2026-07"; // 데이터 시작점 (7월부터)
+      const FIRST_CYCLE = "2026-06"; // 데이터 시작점
       let dbUnsubscribe = null;
       let salaryDebounce = null;
 
       // ── 유틸 ──
-      // 실제 월급 지급일: 25일이 토→24일, 일→23일, 평일→25일
-      function actualPayday(year, month) {
-        const d = new Date(year, month - 1, 25);
-        const wd = d.getDay();
-        if (wd === 6) return 24;
-        if (wd === 0) return 23;
-        return 25;
-      }
       function getCycleKey(date) {
         const d = date || new Date();
         const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
         const payday = actualPayday(y, m);
         if (day >= payday) {
           const next = new Date(y, m, 1);
-          return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+          return next.getFullYear() + "-" + String(next.getMonth() + 1).padStart(2, "0");
         }
-        return `${y}-${String(m).padStart(2, "0")}`;
-      }
-      function cycleKeyToLabel(ck) {
-        const [y, m] = ck.split("-").map(Number);
-        const startM = m === 1 ? 12 : m - 1;
-        const startY = m === 1 ? y - 1 : y;
-        const startDay = actualPayday(startY, startM);
-        const endDay = actualPayday(y, m) - 1;
-        if (startY === y) return `${startM}/${startDay} ~ ${m}/${endDay}`;
-        return `${startY}년 ${startM}/${startDay} ~ ${m}/${endDay}`;
+        return y + "-" + String(m).padStart(2, "0");
       }
       function getCycleLabel(date) { return cycleKeyToLabel(getCycleKey(date)); }
       function getCycleDateRange() {
@@ -2000,23 +1975,40 @@
         const startY = m === 1 ? y - 1 : y;
         const startDay = actualPayday(startY, startM);
         const endDay = actualPayday(y, m) - 1;
-        return { text: `${startY}년 ${startM}월 ${startDay}일 ~ ${y}년 ${m}월 ${endDay}일` };
+        return { text: startY + "년 " + startM + "월 " + startDay + "일 ~ " + y + "년 " + m + "월 " + endDay + "일" };
       }
       function getDaysUntilPayday() {
         const now = new Date();
         const y = now.getFullYear(), m = now.getMonth() + 1;
         const payday = actualPayday(y, m);
-        const today = now.getDate();
-        let nextPay;
-        if (today < payday) {
-          nextPay = new Date(y, m - 1, payday);
-        } else {
-          const nm = m === 12 ? 1 : m + 1;
-          const ny = m === 12 ? y + 1 : y;
-          nextPay = new Date(ny, nm - 1, actualPayday(ny, nm));
-        }
+        let nextPay = now.getDate() < payday
+          ? new Date(y, m - 1, payday)
+          : new Date(m === 12 ? y + 1 : y, m % 12, actualPayday(m === 12 ? y + 1 : y, m === 12 ? 1 : m + 1));
         return Math.ceil((nextPay - now) / 86400000);
       }
+      // 실제 월급 지급일: 25일이 토→24일, 일→23일, 평일→25일
+      function actualPayday(year, month) {
+        const d = new Date(year, month - 1, 25);
+        const wd = d.getDay();
+        if (wd === 6) return 24;
+        if (wd === 0) return 23;
+        return 25;
+      }
+      function cycleKeyToLabel(ck) {
+        const [y, m] = ck.split("-").map(Number);
+        const startM = m === 1 ? 12 : m - 1;
+        const startY = m === 1 ? y - 1 : y;
+        const startDay = actualPayday(startY, startM);
+        const endDay = actualPayday(y, m) - 1;
+        if (startY === y) return startM + "/" + startDay + " ~ " + m + "/" + endDay;
+        return startY + "년 " + startM + "/" + startDay + " ~ " + m + "/" + endDay;
+      }
+      function prevCycleKey(ck) {
+        const [y, mo] = ck.split("-").map(Number);
+        const d = new Date(y, mo - 2, 1);
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      }
+
       function computeAmt(item) {
         const j = state.salaryJini,
           g = state.salaryGeuni;
@@ -2085,12 +2077,6 @@
       const COUPLE_PATH = "zsc_couple";
       function dbRef(path) { return ref(db, path); }
 
-      // ── 뷰잉 사이클의 state 반환 ──
-      function prevCycleKey(ck) {
-        const [y, mo] = ck.split("-").map(Number);
-        const d = new Date(y, mo - 2, 1);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      }
       function getViewState() {
         const ck = viewingCycle;
         const m = monthlyData[ck] || {};
@@ -2106,8 +2092,6 @@
           ledgerNotes: m.ledgerNotes || {},
         };
       }
-
-      // 이번 달인지 여부
       function isCurrentCycle() { return viewingCycle === getCycleKey(); }
 
       // ── DB 실시간 구독 (전체 구조) ──
@@ -2139,16 +2123,16 @@
             };
           }
 
-          // 이번 달 월급 인풋 동기화: viewingCycle 기준, 없으면 직전달
+          // 월급 인풋: viewingCycle 기준, 없으면 직전달
           const _vd = monthlyData[viewingCycle] || {};
           const _pd = monthlyData[prevCycleKey(viewingCycle)] || {};
           const resolvedJ = _vd.salaryJini || _pd.salaryJini || state.salaryJini;
           const resolvedG = _vd.salaryGeuni || _pd.salaryGeuni || state.salaryGeuni;
           state.salaryJini = resolvedJ; state.salaryGeuni = resolvedG;
-          const jiEl = document.getElementById("salary-jini");
-          const gnEl = document.getElementById("salary-geuni");
-          if (jiEl) jiEl.value = resolvedJ;
-          if (gnEl) gnEl.value = resolvedG;
+          const jiEl2 = document.getElementById("salary-jini");
+          const gnEl2 = document.getElementById("salary-geuni");
+          if (jiEl2) jiEl2.value = resolvedJ;
+          if (gnEl2) gnEl2.value = resolvedG;
 
           setSyncStatus("online");
           renderAll();
@@ -2162,17 +2146,14 @@
         setSyncStatus("syncing");
         const cycle = viewingCycle;
         try {
-          // monthly/{cycle}/ 하위에 저장
           const monthPartial = {};
           for (const k of ["checks","fixedChecks","overrides","ledger","ledgerBudgets","ledgerNotes","salaryJini","salaryGeuni"]) {
-            if (partial[k] !== undefined) monthPartial[`monthly/${cycle}/${k}`] = partial[k];
+            if (partial[k] !== undefined) monthPartial["monthly/" + cycle + "/" + k] = partial[k];
           }
-          // 정산/채무는 공통 경로
           if (partial.settlements !== undefined) monthPartial["settlements"] = partial.settlements;
           if (partial.debts !== undefined) monthPartial["debts"] = partial.debts;
           monthPartial["cycleKey"] = cycle;
           await update(dbRef(COUPLE_PATH), monthPartial);
-          // 로컬 monthlyData 동기화
           if (!monthlyData[cycle]) monthlyData[cycle] = {};
           for (const k of Object.keys(partial)) {
             if (k !== "settlements" && k !== "debts") monthlyData[cycle][k] = partial[k];
@@ -2277,11 +2258,11 @@
           if (badge) badge.style.display = isCurrent ? "inline" : "none";
           if (prev) prev.disabled = ck <= FIRST_CYCLE;
           if (next) next.disabled = isCurrent;
-          // banner 제거됨
+          if (banner) banner.style.display = isCurrent ? "none" : "block";
         });
         // nav 상단 월 텍스트도 동기화
         const navMonth = document.getElementById("nav-month");
-        if (navMonth) navMonth.textContent = `${y}년 ${m}월`;
+        if (navMonth) navMonth.textContent = cycleKeyToLabel(ck);
       }
 
       // ── 월 이동 ──
@@ -2308,7 +2289,6 @@
       function renderHome() {
         const vs = getViewState();
         const j = vs.salaryJini, g = vs.salaryGeuni;
-        // 인풋은 이번달일때만 업데이트 (과거 열람 중일땐 인풋 비활성)
         const jiEl = document.getElementById("salary-jini");
         const gnEl = document.getElementById("salary-geuni");
         if (jiEl) { jiEl.value = j; jiEl.disabled = false; }
@@ -2426,14 +2406,15 @@
                 <span class="acct-copy">복사</span>
                </div>`
             : "";
-          const descHtml = item.desc
-            ? item.desc.split("\n").map(l => `<div class="check-desc-line">${l}</div>`).join("")
-            : "";
-          // 수정 버튼 (override 시 원래금액 표시 + 초기화 버튼)
-          const overrideMemo = isOverridden && state.overrides[key]?.memo
-            ? state.overrides[key].memo : "";
+          // _ov 기반으로 memo/desc 읽기 (vs 기준)
+          const overrideMemo = typeof _ov === "object" ? (_ov?.memo || "") : "";
+          const overrideDesc = typeof _ov === "object" ? (_ov?.desc || "") : "";
+          const effectiveDescHtml = overrideDesc
+            ? overrideDesc.split("\n").map(l => `<div class="check-desc-line override-desc-line">${l}</div>`).join("")
+            : (item.desc ? item.desc.split("\n").map(l => `<div class="check-desc-line">${l}</div>`).join("") : "");
+          // override 배지: "원래 ~원" 제거, 비고만 표시
           const overrideBadge = isOverridden
-            ? `<span class="override-badge">수정됨 <span class="override-orig">(원래 ${fmt(baseAmt)})</span>${overrideMemo ? `<span class="override-memo"> · ${overrideMemo}</span>` : ""}</span>`
+            ? `<div class="override-badge">수정됨${overrideMemo ? `<span class="override-memo"> · ${overrideMemo}</span>` : ""}</div>`
             : "";
           const el = document.createElement("div");
           el.className = `check-item ${user}-item ${done ? "done" : ""} ${readonly ? "readonly" : ""}`;
@@ -2451,11 +2432,12 @@
           </div>
         </div>
         ${overrideBadge}
-        <div class="check-desc">${descHtml}</div>
+        <div class="check-desc">${effectiveDescHtml}</div>
         <div class="check-footer">${bankChip}${acctHtml}</div>
         <div class="check-amt-edit" id="amt-edit-${key}" style="display:none">
           <input type="number" class="amt-edit-input" id="amt-input-${key}" value="${amt}" step="1000" placeholder="이번 달 금액">
-          <input type="text" class="amt-memo-input" id="amt-memo-${key}" value="${isOverridden && state.overrides[key]?.memo ? state.overrides[key].memo : ''}" placeholder="비고 (선택)">
+          <input type="text" class="amt-desc-input" id="amt-desc-${key}" value="${overrideDesc || (item.desc || '').replace(/\n/g, ' ')}" placeholder="설명 수정 (선택)">
+          <input type="text" class="amt-memo-input" id="amt-memo-${key}" value="${overrideMemo}" placeholder="비고 (선택)">
           <div class="amt-edit-btns">
             <button class="amt-edit-save" onclick="saveAmtEdit('${key}')">저장</button>
             <button class="amt-edit-cancel" onclick="cancelAmtEdit('${key}')">취소</button>
@@ -2490,9 +2472,9 @@
           accountNo: "3333-37-7070688",
           bank: "카카오뱅크",
           categories: [
-            { id: "rent",     name: "월세 + 관리비", budget: 665000, day: 15, fixed: true },
-            { id: "utility",  name: "공과금",         budget: 200000, day: 10, fixed: false, note: "최대 20만 (변동)" },
-            { id: "living",   name: "생활용품",        budget: 200000, day: null, fixed: false, note: "최대 20만 (품목 기록)" },
+            { id: "rent",    name: "월세 + 관리비", budget: 665000, day: 15, fixed: true, note: "매월 15일 자동이체" },
+            { id: "utility", name: "공과금",         budget: 200000, day: 10, fixed: false, note: "최대 20만" },
+            { id: "living",  name: "생활용품",        budget: 200000, day: null, fixed: false, note: "최대 20만" },
           ],
         },
         {
@@ -2500,37 +2482,36 @@
           name: "충근 명의 식비·데이트 통장",
           accountNo: "7942-32-43389",
           bank: "카카오뱅크",
+          // 식비+데이트비를 통장 하나에 넣되 항목별 예산 배분
           categories: [
-            { id: "food",   name: "식비",     budget: 500000, day: null, fixed: false, note: "마트 장보기 + 배달" },
-            { id: "date",   name: "데이트비", budget: 200000, day: null, fixed: false, note: "월 1회 데이트" },
+            { id: "food", name: "식비",     budget: 200000, day: null, fixed: false, note: "최대 20만", subOf: "fooddate" },
+            { id: "date", name: "데이트비", budget: 100000, day: null, fixed: false, note: "최대 10만", subOf: "fooddate" },
           ],
+          // 두 항목 합산이 실제 이체 금액 (각각 30만 = 합 60만)
+          combinedNote: "식비+데이트비 합산 이체 통장",
         },
       ];
 
       // ── 고정비 note HTML 헬퍼 ──
       function renderNoteHtml(accId, catId, vs) {
         const nk = accId + ":" + catId + ":note";
-        const effNote = vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined
-          ? vs.ledgerNotes[nk]
-          : "";
-        const catNote = (LEDGER_ACCOUNTS.find(a => a.id === accId)
-          ?.categories.find(c => c.id === catId)?.note) || "";
-        const displayNote = effNote !== "" ? effNote : catNote;
+        const catNote = (LEDGER_ACCOUNTS.find(a => a.id === accId)?.categories.find(c => c.id === catId)?.note) || "";
+        const effNote = (vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined) ? vs.ledgerNotes[nk] : catNote;
         const isOverridden = vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined;
+        const sq = "'";
         const editRow = '<div class="ledger-note-edit-row" id="note-edit-' + accId + '-' + catId + '" style="display:none">'
-          + '<input type="text" class="ledger-note-input" id="note-input-' + accId + '-' + catId + '" value="' + displayNote.replace(/"/g,"&quot;") + '" placeholder="서브텍스트">'
-          + '<button class="ledger-add-btn" onclick="saveNote(\'' + accId + '\',\'' + catId + '\')">저장</button>'
-          + '<button class="ledger-budget-cancel" onclick="cancelNoteEdit(\'' + accId + '\',\'' + catId + '\')">취소</button>'
+          + '<input type="text" class="ledger-note-input" id="note-input-' + accId + '-' + catId + '" value="' + effNote.replace(/"/g,"&quot;") + '" placeholder="설명 수정">'
+          + '<button class="ledger-add-btn" onclick="saveNote(' + sq + accId + sq + ',' + sq + catId + sq + ')">저장</button>'
+          + '<button class="ledger-budget-cancel" onclick="cancelNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">취소</button>'
           + '</div>';
-        if (displayNote) {
+        if (effNote) {
           return '<div class="ledger-cat-note" id="note-text-' + accId + '-' + catId + '">'
-            + displayNote
-            + '<button class="ledger-note-edit-btn" onclick="startNoteEdit(\'' + accId + '\',\'' + catId + '\',this)" title="수정">✏️</button>'
-            + (isOverridden ? '<button class="ledger-note-reset-btn" onclick="resetNote(\'' + accId + '\',\'' + catId + '\')">↩</button>' : "")
+            + effNote
+            + ' <button class="ledger-note-edit-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')" title="수정">✏️</button>'
+            + (isOverridden ? '<button class="ledger-note-reset-btn" onclick="resetNote(' + sq + accId + sq + ',' + sq + catId + sq + ')">↩</button>' : '')
             + '</div>' + editRow;
         }
-        return editRow
-          + '<button class="ledger-note-add-btn" onclick="startNoteEdit(\'' + accId + '\',\'' + catId + '\',this)">+ 설명 추가</button>';
+        return editRow + '<button class="ledger-note-add-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">+ 설명 추가</button>';
       }
 
       function renderFixed() {
@@ -2900,20 +2881,22 @@
         if (editEl) editEl.style.display = "none";
       };
       window.saveAmtEdit = async (key) => {
-        const input = document.getElementById(`amt-input-${key}`);
-        const memoInput = document.getElementById(`amt-memo-${key}`);
+        const input = document.getElementById("amt-input-" + key);
+        const memoInput = document.getElementById("amt-memo-" + key);
+        const descInput = document.getElementById("amt-desc-" + key);
         const val = parseInt(input?.value);
         const memo = memoInput?.value.trim() || "";
+        const desc = descInput?.value.trim() || "";
         if (isNaN(val) || val < 0) { showToast("⚠️ 올바른 금액을 입력해주세요"); return; }
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
-        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo } };
+        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo, desc } };
         renderChecklist(); renderHome();
-        showToast("✅ 이번 달 금액 수정됨");
+        showToast("✅ 수정됨");
         await pushState({ overrides: monthlyData[ck].overrides });
       };
       window.resetAmtEdit = async (key) => {
-        const ck = getCycleKey();
+        const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const overrides = { ...(monthlyData[ck].overrides||{}) };
         delete overrides[key];
@@ -2923,28 +2906,28 @@
         await pushState({ overrides: monthlyData[ck].overrides });
       };
 
-      // ── 고정비 note(서브텍스트) 수정 ──
-      window.startNoteEdit = (accId, catId, btnOrStr) => {
+      // ── 고정비 note 수정 ──
+      window.startNoteEdit = (accId, catId) => {
         const txt = document.getElementById("note-text-" + accId + "-" + catId);
         if (txt) txt.style.display = "none";
         const row = document.getElementById("note-edit-" + accId + "-" + catId);
-        if (row) row.style.display = "flex";
+        if (row) { row.style.display = "flex"; }
         const inp = document.getElementById("note-input-" + accId + "-" + catId);
         if (inp) { inp.focus(); inp.select(); }
       };
       window.cancelNoteEdit = (accId, catId) => {
-        const txt = document.getElementById(`note-text-${accId}-${catId}`);
+        const txt = document.getElementById("note-text-" + accId + "-" + catId);
         if (txt) txt.style.display = "";
-        const row = document.getElementById(`note-edit-${accId}-${catId}`);
+        const row = document.getElementById("note-edit-" + accId + "-" + catId);
         if (row) row.style.display = "none";
       };
       window.saveNote = async (accId, catId) => {
-        const inp = document.getElementById(`note-input-${accId}-${catId}`);
+        const inp = document.getElementById("note-input-" + accId + "-" + catId);
         const val = inp?.value.trim() || "";
         const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
         const notes = { ...(monthlyData[ck].ledgerNotes || {}) };
-        notes[`${accId}:${catId}:note`] = val;
+        notes[accId + ":" + catId + ":note"] = val;
         monthlyData[ck].ledgerNotes = notes;
         renderFixed(); showToast("✅ 설명 수정됨");
         await pushState({ ledgerNotes: monthlyData[ck].ledgerNotes });
@@ -2953,7 +2936,7 @@
         const ck = viewingCycle;
         if (!monthlyData[ck]?.ledgerNotes) return;
         const notes = { ...monthlyData[ck].ledgerNotes };
-        delete notes[`${accId}:${catId}:note`];
+        delete notes[accId + ":" + catId + ":note"];
         monthlyData[ck].ledgerNotes = notes;
         renderFixed(); showToast("↩️ 기본 설명으로 복원");
         await pushState({ ledgerNotes: monthlyData[ck].ledgerNotes });
@@ -2982,7 +2965,7 @@
         const typeEl = document.getElementById(`ltype-${accId}-${catId}`);
         const amt = parseInt(amtEl?.value);
         const name = nameEl?.value.trim() || (typeEl?.value === "income" ? "수입" : "지출");
-        const type = typeEl?.value || "expense";
+        const type = typeEl?.value || "expense"; // "expense" | "income"
         if (!amt || amt <= 0) { showToast("⚠️ 금액을 입력해주세요"); return; }
         const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
@@ -3221,9 +3204,8 @@
         document.getElementById("cb-period").textContent = range.text;
         const cr = document.getElementById("cycle-range");
         if (cr) cr.textContent = `현재 사이클: ${range.text}`;
-        const _now = new Date();
-        const _pd = actualPayday(_now.getFullYear(), _now.getMonth() + 1);
-        if (_now.getDate() === _pd) {
+        const _now2 = new Date();
+        if (_now2.getDate() === actualPayday(_now2.getFullYear(), _now2.getMonth() + 1)) {
           document.getElementById("cb-dday").textContent = "🎉 오늘이 월급날!";
           banner.className = "cycle-banner fresh";
           document.getElementById("cb-emoji").textContent = "💰";
