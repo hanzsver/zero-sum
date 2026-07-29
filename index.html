@@ -362,8 +362,6 @@
         font-size: 11px; color: var(--warning); font-weight: 600;
         display: block; margin-bottom: 3px;
       }
-      .override-orig { color: var(--text3); font-weight: 400; }
-      .override-memo { color: var(--text2); font-weight: 400; }
       .check-desc { margin-bottom: 8px; margin-top: 4px; }
       .check-desc-line { font-size: 12px; color: var(--text3); line-height: 1.6; }
       .check-footer { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
@@ -1016,12 +1014,6 @@
       }
       .amt-desc-input:focus { border-color: var(--primary); }
       .override-desc-line { color: var(--primary) !important; }
-      .amt-memo-input {
-        width: 100%; padding: 8px 10px;
-        border: 1.5px solid var(--border2); border-radius: var(--radius-xs);
-        font-size: 13px; font-family: inherit; outline: none; color: var(--text);
-      }
-      .amt-memo-input:focus { border-color: var(--primary); }
       .amt-edit-btns { display: flex; gap: 6px; }
       .amt-edit-save {
         padding: 7px 12px; border-radius: var(--radius-xs); border: none;
@@ -1038,7 +1030,6 @@
         border: 1px solid var(--border2); background: var(--surface);
         color: var(--warning); font-size: 12px; font-family: inherit; cursor: pointer; margin-left: auto;
       }
-      .override-memo { color: var(--text2); font-weight: 400; font-size: 10px; }
 
       /* ── 고정비 가계부 ── */
       .ledger-section {
@@ -1060,6 +1051,7 @@
       .ledger-cat-left { flex: 1; }
       .ledger-cat-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
       .ledger-cat-note { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+      .ledger-cat-note.note-overridden { color: var(--primary); }
       /* note 편집 버튼 - 이체미션 연필 버튼과 동일한 스타일 */
       .ledger-note-edit-btn {
         width: 18px; height: 18px; border-radius: 50%;
@@ -1070,15 +1062,6 @@
         vertical-align: middle;
       }
       .ledger-note-edit-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary-mid); }
-      .ledger-note-reset-btn {
-        width: 18px; height: 18px; border-radius: 50%;
-        border: 1px solid var(--border2); background: var(--surface2);
-        color: var(--text3); cursor: pointer;
-        display: inline-flex; align-items: center; justify-content: center;
-        transition: all 0.12s; flex-shrink: 0; padding: 0; font-size: 9px; line-height: 1;
-        vertical-align: middle;
-      }
-      .ledger-note-reset-btn:hover { background: var(--warning-light); color: var(--warning); border-color: var(--warning); }
       .ledger-note-edit-row {
         display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;
       }
@@ -1163,15 +1146,40 @@
       .ledger-confirm-btn.confirmed {
         background: var(--primary-light); border-color: var(--primary); color: var(--primary);
       }
-      /* 합계 */
-      .ledger-total-row {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 12px 0 0; margin-top: 4px;
+      /* 합계 — 정산 탭 스타일 */
+      .ledger-summary {
+        margin-top: 16px; padding-top: 16px;
         border-top: 1px solid var(--border);
       }
-      .ledger-total-label { font-size: 13px; font-weight: 600; color: var(--text2); }
-      .ledger-total-amt { font-size: 14px; font-weight: 700; color: var(--text); }
-      .ledger-total-amt.over { color: var(--danger); }
+      .ledger-sum-row {
+        display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+      }
+      .ledger-sum-col {
+        flex: 1; background: var(--surface2); border-radius: var(--radius-xs);
+        padding: 12px 10px; text-align: center;
+      }
+      .ledger-sum-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+      .ledger-sum-amt { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+      .ledger-sum-amt.budget { color: var(--text2); }
+      .ledger-sum-amt.used { color: var(--primary); }
+      .ledger-sum-amt.over { color: var(--danger); }
+      .ledger-sum-vs { font-size: 12px; color: var(--text3); font-weight: 600; flex-shrink: 0; }
+      .ledger-sum-bar {
+        height: 6px; background: var(--surface2); border-radius: 99px;
+        overflow: hidden; margin-bottom: 12px;
+      }
+      .ledger-sum-bar-fill {
+        height: 100%; background: var(--primary); border-radius: 99px; transition: width 0.4s;
+      }
+      .ledger-sum-bar-fill.over { background: var(--danger); }
+      .ledger-diff-box {
+        background: var(--primary-light); border-radius: var(--radius-xs);
+        padding: 12px 14px; text-align: center;
+      }
+      .ledger-diff-box.over { background: var(--danger-light); }
+      .ledger-diff-text { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+      .ledger-diff-box.over .ledger-diff-text { color: var(--danger); }
+      .ledger-diff-sub { font-size: 12px; color: var(--text2); }
 
       .ledger-type-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%; }
       .ledger-type-select {
@@ -1274,10 +1282,11 @@
       /* ── 월 네비게이터 ── */
       .month-nav {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 0 20px; height: 44px;
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        max-width: 480px; margin: 0 auto;
+        padding: 0 6px; height: 40px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        max-width: 480px; margin: 0 auto 12px;
       }
       .month-nav-btn {
         width: 30px; height: 30px; border-radius: 50%;
@@ -1288,7 +1297,7 @@
       }
       .month-nav-btn:hover { color: var(--primary); background: var(--primary-light); }
       .month-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
-      .month-nav-center { display: flex; align-items: center; gap: 8px; }
+      .month-nav-center { display: flex; align-items: center; gap: 10px; }
       .month-nav-label {
         font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px;
       }
@@ -1371,7 +1380,7 @@
           <div class="tab active" onclick="showPage('home', this)">홈</div>
           <div class="tab" onclick="showPage('mission', this)">이체 미션</div>
           <div class="tab" onclick="showPage('fixed', this)">고정비</div>
-          <div class="tab" onclick="showPage('settle', this)">정산</div>
+          <!-- <div class="tab" onclick="showPage('settle', this)">정산</div> -->
           <div class="tab" onclick="showPage('plan', this)">내 집 계획</div>
         </div>
       </div>
@@ -1386,9 +1395,6 @@
               <span class="month-nav-badge" id="home-nav-badge" style="display:none">이번 달</span>
             </div>
             <button class="month-nav-btn" id="home-nav-next" onclick="navigateMonth(1,'home')">›</button>
-          </div>
-          <div class="month-readonly-banner" id="home-readonly-banner" style="display:none">
-            📋 과거 기록 보기 모드 — 수정이 불가능해요
           </div>
           <div id="cycle-banner" class="cycle-banner fresh">
             <div class="cb-left">
@@ -1532,14 +1538,11 @@
         <div class="page" id="page-mission">
           <div class="month-nav" id="mission-month-nav">
             <button class="month-nav-btn" id="mission-nav-prev" onclick="navigateMonth(-1,'mission')">‹</button>
-            <div style="display:flex;align-items:center">
+            <div class="month-nav-center">
               <span class="month-nav-label" id="mission-nav-label">—</span>
               <span class="month-nav-badge" id="mission-nav-badge" style="display:none">이번 달</span>
             </div>
             <button class="month-nav-btn" id="mission-nav-next" onclick="navigateMonth(1,'mission')">›</button>
-          </div>
-          <div class="month-readonly-banner" id="mission-readonly-banner" style="display:none">
-            📋 과거 기록 보기 모드 — 체크 및 금액 수정이 불가능해요
           </div>
           <div class="user-toggle">
             <button
@@ -1666,14 +1669,11 @@
         <div class="page" id="page-fixed">
           <div class="month-nav" id="fixed-month-nav">
             <button class="month-nav-btn" id="fixed-nav-prev" onclick="navigateMonth(-1,'fixed')">‹</button>
-            <div style="display:flex;align-items:center">
+            <div class="month-nav-center">
               <span class="month-nav-label" id="fixed-nav-label">—</span>
               <span class="month-nav-badge" id="fixed-nav-badge" style="display:none">이번 달</span>
             </div>
             <button class="month-nav-btn" id="fixed-nav-next" onclick="navigateMonth(1,'fixed')">›</button>
-          </div>
-          <div class="month-readonly-banner" id="fixed-readonly-banner" style="display:none">
-            📋 과거 기록 보기 모드
           </div>
           <div class="card" style="padding: 0; overflow: hidden;">
             <div id="fixed-list"></div>
@@ -1810,8 +1810,8 @@
           accountNo: "3333-37-7070688",
           accountHolder: "한지은",
           rule: "fixed",
-          baseAmt: 532500,
-          desc: "월세+관리비 33.25 · 공과금 10 · 생활용품 10",
+          baseAmt: 582500,
+          desc: "월세+관리비 33.25 · 공과금 10 · 생활용품 15",
           tag: "auto",
         },
         {
@@ -1866,8 +1866,8 @@
           accountNo: "7942-32-43389",
           accountHolder: "이충근",
           rule: "fixed",
-          baseAmt: 350000,
-          desc: "집에서 먹는 식비 25 + 커플 데이트비 10",
+          baseAmt: 300000,
+          desc: "식비 20 + 데이트비 10",
           tag: "auto",
         },
         {
@@ -1889,8 +1889,8 @@
           accountNo: "3333-37-7070688",
           accountHolder: "한지은",
           rule: "fixed",
-          baseAmt: 532500,
-          desc: "월세+관리비 33.25 · 공과금 10 · 생활용품 10",
+          baseAmt: 582500,
+          desc: "월세+관리비 33.25 · 공과금 10 · 생활용품 15",
           tag: "auto",
         },
         {
@@ -1944,8 +1944,8 @@
           accountNo: "7942-32-43389",
           accountHolder: "이충근",
           rule: "fixed",
-          baseAmt: 350000,
-          desc: "집에서 먹는 식비 25 + 커플 데이트비 10",
+          baseAmt: 300000,
+          desc: "식비 20 + 데이트비 10",
           tag: "auto",
         },
         {
@@ -1996,7 +1996,7 @@
       let monthlyData = {};
       // 현재 보고 있는 사이클 (기본: 이번 달)
       let viewingCycle = getCycleKey();
-      const FIRST_CYCLE = "2026-06"; // 데이터 시작점
+      const FIRST_CYCLE = "2026-07"; // 데이터 시작점 (6/25 ~ 7/23)
       let dbUnsubscribe = null;
       let salaryDebounce = null;
 
@@ -2297,12 +2297,10 @@
           const badge = document.getElementById(`${tab}-nav-badge`);
           const prev = document.getElementById(`${tab}-nav-prev`);
           const next = document.getElementById(`${tab}-nav-next`);
-          const banner = document.getElementById(`${tab}-readonly-banner`);
           if (labelEl) { labelEl.textContent = label; labelEl.className = "month-nav-label" + (isCurrent ? "" : " past"); }
           if (badge) badge.style.display = isCurrent ? "inline" : "none";
           if (prev) prev.disabled = ck <= FIRST_CYCLE;
           if (next) next.disabled = isCurrent;
-          if (banner) banner.style.display = isCurrent ? "none" : "block";
         });
         // nav 상단 월 텍스트도 동기화
         const navMonth = document.getElementById("nav-month");
@@ -2450,16 +2448,12 @@
                 <span class="acct-copy">복사</span>
                </div>`
             : "";
-          // _ov 기반으로 memo/desc 읽기 (vs 기준)
-          const overrideMemo = typeof _ov === "object" ? (_ov?.memo || "") : "";
+          // desc override (비고 개념 제거, 설명만 수정)
           const overrideDesc = typeof _ov === "object" ? (_ov?.desc || "") : "";
           const effectiveDescHtml = overrideDesc
             ? overrideDesc.split("\n").map(l => `<div class="check-desc-line override-desc-line">${l}</div>`).join("")
             : (item.desc ? item.desc.split("\n").map(l => `<div class="check-desc-line">${l}</div>`).join("") : "");
-          // override 배지: "원래 ~원" 제거, 비고만 표시
-          const overrideBadge = isOverridden
-            ? `<div class="override-badge">수정됨${overrideMemo ? `<span class="override-memo"> · ${overrideMemo}</span>` : ""}</div>`
-            : "";
+          const overrideBadge = isOverridden ? `<div class="override-badge">수정됨</div>` : "";
           const el = document.createElement("div");
           el.className = `check-item ${user}-item ${done ? "done" : ""} ${readonly ? "readonly" : ""}`;
           el.id = `check-item-${key}`;
@@ -2480,8 +2474,7 @@
         <div class="check-footer">${bankChip}${acctHtml}</div>
         <div class="check-amt-edit" id="amt-edit-${key}" style="display:none">
           <input type="number" class="amt-edit-input" id="amt-input-${key}" value="${amt}" step="1000" placeholder="이번 달 금액">
-          <input type="text" class="amt-desc-input" id="amt-desc-${key}" value="${overrideDesc || (item.desc || '').replace(/\n/g, ' ')}" placeholder="설명 수정 (선택)">
-          <input type="text" class="amt-memo-input" id="amt-memo-${key}" value="${overrideMemo}" placeholder="비고 (선택)">
+          <input type="text" class="amt-desc-input" id="amt-desc-${key}" value="${overrideDesc || (item.desc || '').replace(/\n/g, ' ')}" placeholder="설명">
           <div class="amt-edit-btns">
             <button class="amt-edit-save" onclick="saveAmtEdit('${key}')">저장</button>
             <button class="amt-edit-cancel" onclick="cancelAmtEdit('${key}')">취소</button>
@@ -2516,9 +2509,9 @@
           accountNo: "3333-37-7070688",
           bank: "카카오뱅크",
           categories: [
-            { id: "rent",    name: "월세 + 관리비", budget: 665000, day: 15, fixed: true, note: "매월 15일 자동이체" },
+            { id: "rent",    name: "월세 + 관리비", budget: 665000, day: 15, fixed: true, noEdit: true },
             { id: "utility", name: "공과금",         budget: 200000, day: 10, fixed: false, note: "최대 20만" },
-            { id: "living",  name: "생활용품",        budget: 200000, day: null, fixed: false, note: "최대 20만" },
+            { id: "living",  name: "생활용품",        budget: 300000, day: null, fixed: false, note: "최대 30만" },
           ],
         },
         {
@@ -2528,8 +2521,8 @@
           bank: "카카오뱅크",
           // 식비+데이트비를 통장 하나에 넣되 항목별 예산 배분
           categories: [
-            { id: "food", name: "식비",     budget: 200000, day: null, fixed: false, note: "최대 20만", subOf: "fooddate" },
-            { id: "date", name: "데이트비", budget: 100000, day: null, fixed: false, note: "최대 10만", subOf: "fooddate" },
+            { id: "food", name: "식비",     budget: 400000, day: null, fixed: false, note: "최대 40만" },
+            { id: "date", name: "데이트비", budget: 200000, day: null, fixed: false, note: "최대 20만" },
           ],
           // 두 항목 합산이 실제 이체 금액 (각각 30만 = 합 60만)
           combinedNote: "식비+데이트비 합산 이체 통장",
@@ -2538,23 +2531,29 @@
 
       // ── 고정비 note HTML 헬퍼 ──
       function renderNoteHtml(accId, catId, vs) {
+        const cat = LEDGER_ACCOUNTS.find(a => a.id === accId)?.categories.find(c => c.id === catId);
+        if (!cat) return "";
+        // noEdit 항목은 수정 불가, 텍스트만 표시
+        if (cat.noEdit) {
+          return cat.day ? '<div class="ledger-cat-note">매월 ' + cat.day + '일 자동이체</div>' : "";
+        }
         const nk = accId + ":" + catId + ":note";
-        const catNote = (LEDGER_ACCOUNTS.find(a => a.id === accId)?.categories.find(c => c.id === catId)?.note) || "";
-        const effNote = (vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined) ? vs.ledgerNotes[nk] : catNote;
-        const isOverridden = vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined;
+        const catNote = cat.note || "";
+        const hasOverride = vs.ledgerNotes && vs.ledgerNotes[nk] !== undefined && vs.ledgerNotes[nk] !== "";
+        const overrideVal = hasOverride ? vs.ledgerNotes[nk] : "";
+        const displayNote = hasOverride ? overrideVal : catNote;
         const sq = "'";
+        const esc = s => String(s).replace(/"/g, "&quot;");
         const pencilSvg = '<svg width="9" height="9" viewBox="0 0 11 11" fill="none"><path d="M7.5 1.5l2 2L3 10H1V8L7.5 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
-        const resetSvg = '<svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1 5a4 4 0 1 1 .8 2.4M1 2v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         const editRow = '<div class="ledger-note-edit-row" id="note-edit-' + accId + '-' + catId + '" style="display:none">'
-          + '<input type="text" class="ledger-note-input" id="note-input-' + accId + '-' + catId + '" value="' + effNote.replace(/"/g,"&quot;") + '" placeholder="설명 수정">'
+          + '<input type="text" class="ledger-note-input" id="note-input-' + accId + '-' + catId + '" value="' + esc(overrideVal) + '" placeholder="' + esc(catNote || "설명 입력") + '">'
           + '<button class="ledger-note-save-btn" onclick="saveNote(' + sq + accId + sq + ',' + sq + catId + sq + ')">저장</button>'
           + '<button class="ledger-note-cancel-btn" onclick="cancelNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">취소</button>'
           + '</div>';
-        if (effNote) {
-          return '<div class="ledger-cat-note" id="note-text-' + accId + '-' + catId + '">'
-            + effNote
+        if (displayNote) {
+          return '<div class="ledger-cat-note' + (hasOverride ? ' note-overridden' : '') + '" id="note-text-' + accId + '-' + catId + '">'
+            + displayNote
             + '<button class="ledger-note-edit-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')" title="수정">' + pencilSvg + '</button>'
-            + (isOverridden ? '<button class="ledger-note-reset-btn" onclick="resetNote(' + sq + accId + sq + ',' + sq + catId + sq + ')" title="원래대로">' + resetSvg + '</button>' : '')
             + '</div>' + editRow;
         }
         return editRow + '<button class="ledger-note-add-btn" onclick="startNoteEdit(' + sq + accId + sq + ',' + sq + catId + sq + ')">+ 설명 추가</button>';
@@ -2575,7 +2574,6 @@
           section.innerHTML = `
             <div class="ledger-account-header">
               <div class="ledger-account-name">${account.name}</div>
-              <div class="ledger-account-bank">${account.bank} · ${account.accountNo}</div>
             </div>`;
 
           // 각 카테고리
@@ -2610,7 +2608,6 @@
                 <div class="ledger-cat-left">
                   <div class="ledger-cat-name">${cat.name}</div>
                   ${renderNoteHtml(account.id, cat.id, vs)}
-                  ${cat.day ? `<div class="ledger-cat-note">매월 ${cat.day}일 자동이체</div>` : ""}
                 </div>
                 <div class="ledger-cat-right">
                   <div class="ledger-budget">${fmt(cat.budget)}</div>
@@ -2633,8 +2630,8 @@
                          <option value="expense">지출</option>
                          <option value="income">수입</option>
                        </select>
-                       <input type="number" class="ledger-amt-input" id="linput-${account.id}-${cat.id}" placeholder="금액" step="1000">
                        <input type="text" class="ledger-name-input" id="lname-${account.id}-${cat.id}" placeholder="내용">
+                       <input type="number" class="ledger-amt-input" id="linput-${account.id}-${cat.id}" placeholder="금액" step="1000">
                        <button class="ledger-add-btn" onclick="addLedgerItem('${account.id}','${cat.id}')">추가</button>
                      </div>`
                 }
@@ -2642,17 +2639,43 @@
             section.appendChild(catEl);
           });
 
-          // 섹션 합계
-          const totalBudget = account.categories.reduce((s, c) => s + c.budget, 0);
+          // 섹션 합계 — 정산 탭 스타일
+          const totalBudget = account.categories.reduce((s, c) => {
+            const bk = account.id + ":" + c.id;
+            return s + (vs.ledgerBudgets?.[bk] !== undefined ? vs.ledgerBudgets[bk] : c.budget);
+          }, 0);
           const totalActual = account.categories.reduce((s, c) => {
             const d = (accLedger[c.id] || {});
             return s + (d.actual !== null && d.actual !== undefined ? d.actual : 0);
           }, 0);
           const totalDiff = totalBudget - totalActual;
+          const isOver = totalDiff < 0;
+          const usedPct = totalBudget > 0 ? Math.round(totalActual / totalBudget * 100) : 0;
+          const diffText = isOver
+            ? `예산보다 <strong>${fmt(-totalDiff)}</strong> 초과했어요`
+            : totalDiff === 0
+              ? "예산을 딱 맞게 썼어요 🎉"
+              : `아직 <strong>${fmt(totalDiff)}</strong> 남았어요`;
           section.innerHTML += `
-            <div class="ledger-total-row">
-              <span class="ledger-total-label">이번 달 합계</span>
-              <span class="ledger-total-amt ${totalDiff < 0 ? "over" : ""}">${fmt(totalActual)} / ${fmt(totalBudget)}</span>
+            <div class="ledger-summary">
+              <div class="ledger-sum-row">
+                <div class="ledger-sum-col">
+                  <div class="ledger-sum-label">예산</div>
+                  <div class="ledger-sum-amt budget">${fmt(totalBudget)}</div>
+                </div>
+                <div class="ledger-sum-vs">vs</div>
+                <div class="ledger-sum-col">
+                  <div class="ledger-sum-label">사용</div>
+                  <div class="ledger-sum-amt ${isOver ? "over" : "used"}">${fmt(totalActual)}</div>
+                </div>
+              </div>
+              <div class="ledger-sum-bar">
+                <div class="ledger-sum-bar-fill ${isOver ? "over" : ""}" style="width:${Math.min(100, usedPct)}%"></div>
+              </div>
+              <div class="ledger-diff-box ${isOver ? "over" : ""}">
+                <div class="ledger-diff-text">${diffText}</div>
+                <div class="ledger-diff-sub">예산의 ${usedPct}% 사용</div>
+              </div>
             </div>`;
           wrap.appendChild(section);
         });
@@ -2928,15 +2951,13 @@
       };
       window.saveAmtEdit = async (key) => {
         const input = document.getElementById("amt-input-" + key);
-        const memoInput = document.getElementById("amt-memo-" + key);
         const descInput = document.getElementById("amt-desc-" + key);
         const val = parseInt(input?.value);
-        const memo = memoInput?.value.trim() || "";
         const desc = descInput?.value.trim() || "";
         if (isNaN(val) || val < 0) { showToast("⚠️ 올바른 금액을 입력해주세요"); return; }
         const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
-        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, memo, desc } };
+        monthlyData[ck].overrides = { ...(monthlyData[ck].overrides||{}), [key]: { amt: val, desc } };
         renderChecklist(); renderHome();
         showToast("✅ 수정됨");
         await pushState({ overrides: monthlyData[ck].overrides });
@@ -2976,15 +2997,6 @@
         notes[accId + ":" + catId + ":note"] = val;
         monthlyData[ck].ledgerNotes = notes;
         renderFixed(); showToast("✅ 설명 수정됨");
-        await pushState({ ledgerNotes: monthlyData[ck].ledgerNotes });
-      };
-      window.resetNote = async (accId, catId) => {
-        const ck = viewingCycle;
-        if (!monthlyData[ck]?.ledgerNotes) return;
-        const notes = { ...monthlyData[ck].ledgerNotes };
-        delete notes[accId + ":" + catId + ":note"];
-        monthlyData[ck].ledgerNotes = notes;
-        renderFixed(); showToast("↩️ 기본 설명으로 복원");
         await pushState({ ledgerNotes: monthlyData[ck].ledgerNotes });
       };
 
