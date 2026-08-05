@@ -2563,7 +2563,6 @@
         const wrap = document.getElementById("fixed-list");
         wrap.innerHTML = "";
         const vs = getViewState();
-        const readonly = false;
         LEDGER_ACCOUNTS.forEach(account => {
           const ledger = vs.ledger || {};
           const accLedger = ledger[account.id] || {};
@@ -2620,8 +2619,8 @@
                 <span class="ledger-diff ${over ? "over" : "ok"}">${over ? "+" + fmt(-diff) + " 초과" : fmt(diff) + " 여유"}</span>
               </div>` : ""}
               ${items.length ? `<div class="ledger-items">${itemsHtml}</div>` : ""}
-              ${readonly ? "" : `<div class="ledger-input-row" id="ledger-input-${account.id}-${cat.id}">`}
-              ${readonly ? "" : cat.fixed
+              <div class="ledger-input-row" id="ledger-input-${account.id}-${cat.id}">
+                ${cat.fixed
                   ? `<button class="ledger-confirm-btn ${hasActual ? "confirmed" : ""}" onclick="toggleLedgerFixed('${account.id}','${cat.id}',${cat.budget})">
                       ${hasActual ? "✓ 납부 확인됨" : "납부 확인"}
                     </button>`
