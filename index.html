@@ -1999,6 +1999,7 @@
       const FIRST_CYCLE = "2026-07"; // 데이터 시작점 (6/25 ~ 7/23)
       let dbUnsubscribe = null;
       let salaryDebounce = null;
+      let localWriteAt = 0; // 로컬 저장 직후 원격 덮어쓰기 방지
 
       // ── 유틸 ──
       function getCycleKey(date) {
@@ -2151,8 +2152,10 @@
           state.debts = remote.debts || [];
           state.cycleKey = remote.cycleKey || getCycleKey();
 
-          // 월별 데이터 로드
-          monthlyData = remote.monthly || {};
+          // 월별 데이터 로드 — 로컬 저장 직후 1.5초간은 원격으로 덮어쓰지 않음
+          if (Date.now() - localWriteAt > 1500) {
+            monthlyData = remote.monthly || {};
+          }
 
           // 이번 달 데이터가 없으면 기존 최상위 데이터로 마이그레이션
           const currentCycle = getCycleKey();
@@ -2188,6 +2191,7 @@
 
       async function pushState(partial) {
         setSyncStatus("syncing");
+        localWriteAt = Date.now();
         const cycle = viewingCycle;
         try {
           const monthPartial = {};
@@ -2202,6 +2206,7 @@
           for (const k of Object.keys(partial)) {
             if (k !== "settlements" && k !== "debts") monthlyData[cycle][k] = partial[k];
           }
+          localWriteAt = Date.now();
           setSyncStatus("online");
         } catch (e) {
           setSyncStatus("offline");
@@ -3003,7 +3008,7 @@
       window.toggleLedgerFixed = async (accId, catId, budget) => {
         const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
-        const ledger = { ...(monthlyData[ck].ledger || {}) };
+        const ledger = JSON.parse(JSON.stringify(monthlyData[ck].ledger || {}));
         if (!ledger[accId]) ledger[accId] = {};
         const cur = ledger[accId][catId];
         if (cur && cur.actual !== null && cur.actual !== undefined) {
@@ -3013,7 +3018,7 @@
         }
         monthlyData[ck].ledger = ledger;
         renderFixed();
-        await pushState({ ledger: monthlyData[ck].ledger });
+        await pushState({ ledger: ledger });
       };
 
       window.addLedgerItem = async (accId, catId) => {
@@ -3022,13 +3027,15 @@
         const typeEl = document.getElementById(`ltype-${accId}-${catId}`);
         const amt = parseInt(amtEl?.value);
         const name = nameEl?.value.trim() || (typeEl?.value === "income" ? "수입" : "지출");
-        const type = typeEl?.value || "expense"; // "expense" | "income"
+        const type = typeEl?.value || "expense";
         if (!amt || amt <= 0) { showToast("⚠️ 금액을 입력해주세요"); return; }
         const ck = viewingCycle;
         if (!monthlyData[ck]) monthlyData[ck] = {};
-        const ledger = { ...(monthlyData[ck].ledger || {}) };
+        // 깊은 복사 (참조 공유 방지)
+        const ledger = JSON.parse(JSON.stringify(monthlyData[ck].ledger || {}));
         if (!ledger[accId]) ledger[accId] = {};
         if (!ledger[accId][catId]) ledger[accId][catId] = { actual: 0, items: [] };
+        if (!Array.isArray(ledger[accId][catId].items)) ledger[accId][catId].items = [];
         ledger[accId][catId].items.push({ name, amt, type });
         ledger[accId][catId].actual = ledger[accId][catId].items.reduce((s, x) =>
           x.type === "income" ? s - x.amt : s + x.amt, 0);
@@ -3037,19 +3044,19 @@
         if (nameEl) nameEl.value = "";
         renderFixed();
         showToast(type === "income" ? "💚 수입 반영됨!" : "✅ 기록 추가!");
-        await pushState({ ledger: monthlyData[ck].ledger });
+        await pushState({ ledger: ledger });
       };
 
       window.deleteLedgerItem = async (accId, catId, idx) => {
         const ck = viewingCycle;
         if (!monthlyData[ck]?.ledger?.[accId]?.[catId]) return;
-        const ledger = { ...monthlyData[ck].ledger };
+        const ledger = JSON.parse(JSON.stringify(monthlyData[ck].ledger));
         ledger[accId][catId].items.splice(idx, 1);
         ledger[accId][catId].actual = ledger[accId][catId].items.reduce((s, x) =>
           x.type === "income" ? s - x.amt : s + x.amt, 0);
         monthlyData[ck].ledger = ledger;
         renderFixed();
-        await pushState({ ledger: monthlyData[ck].ledger });
+        await pushState({ ledger: ledger });
       };
 
       window.copyAcct = (e, acct) => {
